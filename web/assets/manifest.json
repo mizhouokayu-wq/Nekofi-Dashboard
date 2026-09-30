@@ -1,0 +1,46 @@
+{
+  "hero": {
+    "averageColor": "#1e1735",
+    "luminance": 0.1045,
+    "tone": "dark",
+    "suggestedInk": "#fdf7f4",
+    "file": "assets/hero.jpg",
+    "placeholder": true,
+    "width": 1800,
+    "height": 563,
+    "bytes": 10248
+  },
+  "cardBuild": {
+    "averageColor": "#5c3526",
+    "luminance": 0.2361,
+    "tone": "dark",
+    "suggestedInk": "#fdf7f4",
+    "file": "assets/card-build.jpg",
+    "placeholder": true,
+    "width": 960,
+    "height": 540,
+    "bytes": 6664
+  },
+  "cardLearn": {
+    "averageColor": "#434a3e",
+    "luminance": 0.281,
+    "tone": "dark",
+    "suggestedInk": "#fdf7f4",
+    "file": "assets/card-learn.jpg",
+    "placeholder": true,
+    "width": 960,
+    "height": 540,
+    "bytes": 7000
+  },
+  "cardGrow": {
+    "averageColor": "#172435",
+    "luminance": 0.1352,
+    "tone": "dark",
+    "suggestedInk": "#fdf7f4",
+    "file": "assets/card-grow.jpg",
+    "placeholder": true,
+    "width": 960,
+    "height": 540,
+    "bytes": 5977
+  }
+}

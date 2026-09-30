@@ -1,0 +1,27 @@
+{
+  "name": "personal-planning-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "个人规划仪表盘：Obsidian 插件（Markdown/YAML 是唯一事实来源）与浏览器版渲染层",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "check": "node tools/build.mjs --check",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node tests/run.js",
+    "pretest": "node tools/build-modules.mjs",
+    "format": "node tools/format-src.mjs",
+    "format:check": "node tools/format-src.mjs --check",
+    "bump": "node tools/bump-version.mjs",
+    "web:sample": "node web/tools/build-sample.mjs",
+    "web:data": "node web/tools/export-data.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "builtin-modules": "^5.4.0",
+    "esbuild": "^0.28.2",
+    "obsidian": "^1.13.1",
+    "prettier": "^3.3.3",
+    "typescript": "^5.9.3"
+  }
+}

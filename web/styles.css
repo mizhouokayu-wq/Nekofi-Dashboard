@@ -1,0 +1,3136 @@
+/* =====================================================================
+ * 个人规划仪表盘 · Web — 极简主义设计系统（minimalism）
+ *
+ * 设计依据：仓库根目录 DESIGN.md，与 Obsidian 插件 styles.css 同源：
+ *   · 纯白画布 + 黑白灰三色，唯一强调色是「墨黑」
+ *   · 细字重衬线展示标题（DM Serif Display / Songti SC） + 细字重无衬线正文
+ *   · 零圆角、零阴影、零渐变；只用 1px 单线分隔
+ *   · 留白即设计：区块间距 64px，卡内边距 40px，正文行高 1.7
+ *   · 最大内容宽 1140px；断点 640 / 1024
+ *
+ * 这是一个独立静态站：令牌直接写在 :root 上，不依赖 Obsidian 的 CSS 变量，
+ * 也不使用任何 require / 构建期变量。深色反相只需给 <body> 加 .theme-dark。
+ *
+ * 结构：
+ *   0. 设计令牌 ............ 颜色 / 字体 / 间距
+ *   1. 外壳 ................ 画布、顶部导航、页脚
+ *   2. 页首 masthead ....... 眉标 + 展示标题 + 40px 墨线 + 说明与日期
+ *   3. 今日焦点与统计卡 .... focus-strip / kpi
+ *   4. 索引导航 ............ 01 / 02 / 03 编号入口（无图片）
+ *   5. 栅格与面板 .......... panel / project-card
+ *   6. 列表与行 ............ 1px 分隔，无背景块
+ *   7. 表单与筛选
+ *   8. 徽标、时间规划、语义色
+ *   9. 抽屉
+ *  10. 响应式（1024 / 640）
+ *
+ * ⚠ 本文件是**两层叠加**，读的时候务必分清楚：
+ *   · 第 1–10 节（直到下面的「夜航极光」分隔线）= 极简主义基线：纯白、零圆角、零阴影；
+ *   · 第 11 节起 = 夜航极光覆盖层：重写令牌（`:root` 的第二套）并覆盖外壳、卡片、抽屉等规则；
+ *   · 第 12 节 = 浅色主题（`.theme-light`），与极光同名令牌给出浅色取值。
+ *   基线与覆盖层对同一个类各写一次（用工具扫过：318 条规则里只有 3 条被完全覆盖），
+ *   所以**改动某个类时两处都要看**；只改一处最常见的后果是「某些元素停在零圆角/纯白」。
+ *   插件的 `styles.css` 调色板由本文件的令牌生成（node tools/sync-app.mjs，--check 会拦漂移），
+ *   它自己的排版部分是手写的，不要指望两边逐行一致。
+ * ===================================================================== */
+
+/* ---------------------------------------------------------------- *
+ * 0. 设计令牌
+ * ---------------------------------------------------------------- */
+
+:root {
+  /* 画布与墨色：DESIGN.md 的取值 */
+  --pp-canvas: #ffffff;
+  --pp-surface-light: #f7f7f7;
+  --pp-surface-mid: #f0f0f0;
+  --pp-ink: #0a0a0a;
+  --pp-ink-soft: #1a1a1a;
+  --pp-body: #3a3a3a;
+  --pp-muted: #767676;
+  --pp-faint: #a0a0a0;
+  --pp-hairline: #e0e0e0;
+  --pp-hairline-soft: #ebebeb;
+  --pp-on-ink: #ffffff;
+  --pp-success: #2d6a4f;
+  --pp-warning: #b5621a;
+  --pp-danger: #b91c1c;
+
+  /* 排版：两种字体家族，展示用衬线，界面用无衬线。
+     插件离线运行、不打包 webfont，所以 DM Serif Display / DM Sans 只在用户本机装过时才生效，
+     真正保证观感的是后面的本机字体。无衬线一律优先用 Obsidian 自己的字体变量
+     （--font-interface / --font-text），这样仪表盘和用户选定的界面字体保持一致；
+     浏览器版没有这两个变量，自然回落到系统字体。 */
+  --pp-serif: "DM Serif Display", "Playfair Display", Georgia, "Times New Roman", "Source Han Serif SC", "Noto Serif SC", "Songti SC", SimSun, serif;
+  --pp-sans: var(--font-interface, var(--font-text, "DM Sans")), "Inter", -apple-system, "Segoe UI", "IBM Plex Sans SC", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+
+  /* 间距：8px 倍数体系 */
+  --pp-xxs: 4px;
+  --pp-xs: 8px;
+  --pp-sm: 16px;
+  --pp-md: 24px;
+  --pp-lg: 40px;
+  --pp-xl: 64px;
+  --pp-xxl: 96px;
+
+  /* ---- 动效节奏（MOTION.md 第 1 节；与插件 styles.css 逐字一致。
+         这两个文件里都手写一份：动效令牌**不进** sync-app.mjs 的 PALETTE_KEYS，
+         与既有的 --pp-r-* 圆角令牌同一模式。 ---- */
+  --pp-mo-instant: 90ms;
+  --pp-mo-fast: 140ms;
+  --pp-mo-base: 220ms;
+  --pp-mo-slow: 380ms;
+  --pp-mo-enter: 480ms;
+  --pp-mo-ambient: 14s;
+  --pp-mo-stagger: 45ms;
+  --pp-mo-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --pp-mo-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pp-mo-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pp-mo-lift: -3px;
+
+  /* 内容与外壳共用同一宽度，页首与导航自然对齐 */
+  --pp-content: 1140px;
+  /* 横向留白按**容器**宽度算，不按视口：Obsidian 窗格可能只有 300 多像素，而窗口有 1920 ——
+     用 vw 的话窄窗格里光留白就被吃掉近四成。插件里最近的查询容器是 shadow 宿主
+     （container-type: inline-size，见桥接样式）；浏览器版没有容器时按规范回退到小视口，等价于原来的 vw。 */
+  --pp-gutter: clamp(var(--pp-md), 5cqw, var(--pp-xl));
+
+  color-scheme: light;
+}
+
+/* 深色主题：同一套结构反相，令牌是唯一需要改动的部分 */
+.theme-dark {
+  --pp-canvas: #191919;
+  --pp-surface-light: #1f1f1f;
+  --pp-surface-mid: #242424;
+  --pp-ink: #e9e9e9;
+  --pp-ink-soft: #d6d6d6;
+  --pp-body: #c4c4c4;
+  --pp-muted: #999999;
+  --pp-faint: #6f6f6f;
+  --pp-hairline: #333333;
+  --pp-hairline-soft: #2a2a2a;
+  --pp-on-ink: #191919;
+  --pp-success: #6fbf9a;
+  --pp-warning: #e0a45e;
+  --pp-danger: #e07a7a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: var(--pp-canvas);
+  color: var(--pp-body);
+  font-family: var(--pp-sans);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--pp-ink); text-decoration: none; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+:focus-visible { outline: 1px solid var(--pp-ink); outline-offset: 2px; }
+
+/* button-primary：墨底白字，零圆角，最小高度 42px，字距 1px */
+.primary-btn {
+  min-height: 42px;
+  padding: 11px 28px;
+  border: 1px solid var(--pp-ink);
+  border-radius: 0;
+  background: var(--pp-ink);
+  color: var(--pp-on-ink);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.primary-btn:hover,
+.primary-btn:focus-visible {
+  background: var(--pp-ink-soft);
+  border-color: var(--pp-ink-soft);
+  outline: none;
+}
+
+/* ---------------------------------------------------------------- *
+ * 0.5 工具类
+ * ---------------------------------------------------------------- */
+
+/* 只给读屏的文本：视觉隐藏，但保留在可访问树里（不能 display:none，那样读屏也读不到） */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- *
+ * 1. 外壳
+ * ---------------------------------------------------------------- */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--pp-canvas);
+}
+
+/* 顶部导航：60px 纯白条 + 1px 底线，导航本身几乎「不存在」 */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pp-sm);
+  width: 100%;
+  max-width: var(--pp-content);
+  min-height: 60px;
+  margin: 0 auto;
+  padding: var(--pp-sm) var(--pp-gutter);
+  border-bottom: 1px solid var(--pp-hairline);
+  background: var(--pp-canvas);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 0 0 auto;
+  margin-right: var(--pp-xs);
+  color: var(--pp-ink);
+}
+
+.brand-text { display: flex; flex-direction: column; }
+
+.brand-text strong {
+  font-family: var(--pp-serif);
+  font-size: 17px;
+  font-weight: 300;
+  letter-spacing: -0.2px;
+  line-height: 1.1;
+}
+
+.brand-text small {
+  color: var(--pp-faint);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* nav-link：细字重、无底色，靠 1px 下划线表示当前页 */
+.tab {
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--pp-muted);
+  padding: 10px 2px;
+  margin-right: var(--pp-sm);
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.tab:hover,
+.tab:focus-visible {
+  color: var(--pp-ink);
+  border-bottom-color: var(--pp-hairline);
+  outline: none;
+}
+
+.tab[aria-current="page"] {
+  color: var(--pp-ink);
+  border-bottom-color: var(--pp-ink);
+}
+
+.tab-count {
+  margin-left: 6px;
+  color: var(--pp-faint);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.topbar-side {
+  display: flex;
+  align-items: center;
+  gap: var(--pp-sm);
+  flex: 0 0 auto;
+}
+
+.date-chip {
+  color: var(--pp-faint);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.view {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--pp-content);
+  margin: 0 auto;
+  /* 顶部是 position:sticky 的 .topbar（min-height 60px）：
+     切换页签时 switchView() 会 scrollIntoView({block:"start"})，
+     没有这段留白，内容顶部就会被顶栏永久盖住。 */
+  scroll-margin-top: 76px;
+  padding: var(--pp-xl) var(--pp-gutter) var(--pp-xxl);
+  animation: none;
+}
+
+.view:focus { outline: none; }
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pp-xs) var(--pp-md);
+  width: 100%;
+  max-width: var(--pp-content);
+  margin: 0 auto;
+  padding: var(--pp-md) var(--pp-gutter) var(--pp-xl);
+  border-top: 1px solid var(--pp-hairline);
+  color: var(--pp-muted);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.footer strong { color: var(--pp-ink); font-weight: 400; }
+
+.footer code {
+  color: var(--pp-muted);
+  font-family: var(--pp-sans);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* ---------------------------------------------------------------- *
+ * 2. 页首 masthead：眉标 → 展示标题 → 40px 墨线 → 说明 + 日期
+ * ---------------------------------------------------------------- */
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--pp-xs);
+  margin: 0 0 var(--pp-xl);
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--pp-muted);
+  font-family: var(--pp-sans);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.masthead h1 {
+  max-width: 900px;
+  margin: var(--pp-xs) 0 0;
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 72px;
+  font-weight: 300;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.masthead-rule {
+  width: 40px;
+  height: 1px;
+  margin: var(--pp-sm) 0 var(--pp-xs);
+  background: var(--pp-ink);
+}
+
+.masthead-lede {
+  max-width: 660px;
+  margin: 0;
+  color: var(--pp-muted);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+.masthead-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pp-xs) var(--pp-md);
+  margin: var(--pp-sm) 0 0;
+}
+
+/* ---------------------------------------------------------------- *
+ * 3. 今日焦点（quote-block）与统计卡
+ * ---------------------------------------------------------------- */
+
+.focus-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--pp-xs);
+  margin: 0 0 var(--pp-xl);
+  padding: 0 0 0 var(--pp-lg);
+  border: 0;
+  border-left: 3px solid var(--pp-ink);
+  background: none;
+}
+
+.focus-strip strong {
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 26px;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+}
+
+.focus-hint {
+  max-width: 660px;
+  color: var(--pp-muted);
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.kpi {
+  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pp-xs);
+  padding: var(--pp-lg) var(--pp-md) var(--pp-md);
+  border: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: var(--pp-canvas);
+}
+
+.kpi-value {
+  order: 1;
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 52px;
+  font-weight: 300;
+  letter-spacing: -1.5px;
+  line-height: 1.05;
+}
+
+.kpi-hint {
+  order: 2;
+  color: var(--pp-faint);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.kpi-label {
+  order: 3;
+  color: var(--pp-muted);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.kpi-bar {
+  order: 4;
+  height: 1px;
+  margin-top: var(--pp-xs);
+  background: var(--pp-hairline);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.kpi-bar span {
+  display: block;
+  height: 1px;
+  background: var(--pp-ink);
+}
+
+/* ---------------------------------------------------------------- *
+ * 4. 索引导航：01 / 02 / 03 的编号排版入口，不使用任何图片
+ * ---------------------------------------------------------------- */
+
+.waypoints {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0 0 var(--pp-xl);
+  border-top: 1px solid var(--pp-hairline);
+}
+
+.waypoint {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto auto;
+  align-items: baseline;
+  gap: var(--pp-xxs) var(--pp-sm);
+  padding: var(--pp-md) var(--pp-md) var(--pp-md) 0;
+  border: 0;
+  border-bottom: 1px solid var(--pp-hairline);
+  border-right: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: none;
+  color: var(--pp-ink);
+  font: inherit;
+  text-align: left;
+}
+
+.waypoint:last-child { border-right: 0; }
+
+.waypoint:hover,
+.waypoint:focus-visible {
+  background: var(--pp-surface-light);
+  outline: none;
+}
+
+.waypoint-index {
+  grid-row: 1 / 4;
+  color: var(--pp-faint);
+  font-family: var(--pp-serif);
+  font-size: 26px;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  line-height: 1;
+}
+
+.waypoint-eyebrow {
+  grid-column: 2;
+  color: var(--pp-muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.waypoint-title {
+  grid-column: 2;
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.waypoint-description {
+  grid-column: 2;
+  max-width: 660px;
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-weight: 300;
+}
+
+/* ---------------------------------------------------------------- *
+ * 5. 栅格与面板：1px 线框代替色块背景
+ * ---------------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--pp-lg) var(--pp-md);
+}
+
+.span-3 { grid-column: span 3; }
+.span-4 { grid-column: span 4; }
+.span-5 { grid-column: span 5; }
+.span-6 { grid-column: span 6; }
+.span-7 { grid-column: span 7; }
+.span-8 { grid-column: span 8; }
+.span-12 { grid-column: span 12; }
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: var(--pp-canvas);
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;              /* 工具条放不下时换行，而不是把标题与说明压成一列一个字 */
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--pp-md);
+  padding: var(--pp-lg) var(--pp-lg) var(--pp-sm);
+  border-bottom: 1px solid var(--pp-hairline);
+}
+
+/* 文案块至少要能放下一行字；工具条超宽时自己换行 */
+.panel-head > div:first-child {
+  flex: 1 1 16ch;
+  min-width: 0;
+}
+
+.panel-head h2 {
+  margin: 0;
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 26px;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+}
+
+.panel-head p {
+  max-width: 660px;
+  margin: var(--pp-xxs) 0 0;
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-weight: 300;
+}
+
+.panel-body {
+  flex: 1 1 auto;
+  padding: var(--pp-md) var(--pp-lg) var(--pp-lg);
+}
+
+.panel-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pp-xs);
+  flex: 0 0 auto;
+}
+
+.project-list {
+  display: grid;
+  gap: var(--pp-md);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pp-sm);
+  padding: var(--pp-lg);
+  border: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: var(--pp-canvas);
+}
+
+.project-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--pp-md);
+}
+
+.project-head h3 {
+  margin: 0;
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.project-sub {
+  margin-top: var(--pp-xxs);
+  color: var(--pp-muted);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.project-outcome {
+  max-width: 660px;
+  margin: 0;
+  color: var(--pp-muted);
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.project-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pp-xs) var(--pp-md);
+  padding-top: var(--pp-sm);
+  border-top: 1px solid var(--pp-hairline-soft);
+}
+
+.project-foot .meta-row { justify-content: flex-end; }
+
+/* 完成度：1px 细线进度 + 衬线百分比（与插件单项目页一致，不使用任何图形元素） */
+.progress-line {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--pp-xs);
+  min-width: 150px;
+}
+
+.progress-value {
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.3px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.progress-bar {
+  flex: 1 1 auto;
+  display: block;
+  height: 1px;
+  background: var(--pp-hairline);
+}
+
+.progress-fill {
+  display: block;
+  height: 1px;
+  background: var(--pp-ink);
+}
+
+/* ---------------------------------------------------------------- *
+ * 6. 列表与行
+ * ---------------------------------------------------------------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pp-xxs);
+  padding: 3px 10px;
+  border: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: transparent;
+  color: var(--pp-muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.chip[data-status="planning"],
+.chip[data-status="todo"] { border-color: var(--pp-ink); color: var(--pp-ink); }
+.chip[data-status="doing"],
+.chip[data-status="active"] { border-color: var(--pp-success); color: var(--pp-success); }
+.chip[data-status="completed"] { border-color: var(--pp-hairline); color: var(--pp-muted); }
+.chip[data-status="blocked"],
+.chip[data-status="expired"] { border-color: var(--pp-danger); color: var(--pp-danger); }
+.chip[data-status="paused"] { border-color: var(--pp-warning); color: var(--pp-warning); }
+.chip[data-status="archived"] { border-color: var(--pp-hairline-soft); color: var(--pp-faint); }
+.chip[data-priority="high"] { border-color: var(--pp-danger); color: var(--pp-danger); }
+.chip[data-priority="medium"] { border-color: var(--pp-warning); color: var(--pp-warning); }
+.chip[data-priority="low"] { border-color: var(--pp-hairline-soft); color: var(--pp-faint); }
+.chip[data-tone="danger"] { border-color: var(--pp-danger); color: var(--pp-danger); }
+.chip[data-tone="warn"] { border-color: var(--pp-warning); color: var(--pp-warning); }
+.chip[data-tone="muted"] { border-color: var(--pp-hairline); color: var(--pp-muted); }
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pp-xxs) var(--pp-xs);
+}
+
+/* button-ghost：只有文字，hover 出 1px 下划线 */
+.link-btn {
+  min-height: 30px;
+  padding: var(--pp-xxs) 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--pp-muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.link-btn:hover,
+.link-btn:focus-visible {
+  border-bottom-color: var(--pp-ink);
+  color: var(--pp-ink);
+  outline: none;
+}
+
+.row-title {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--pp-ink);
+  font-size: 15px;
+  font-weight: 300;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.row-title:hover,
+.row-title:focus-visible {
+  border-bottom-color: var(--pp-ink);
+  outline: none;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pp-xxs);
+  padding: var(--pp-md) 0;
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-weight: 300;
+}
+
+.empty strong {
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.3px;
+}
+
+.res-list { display: flex; flex-direction: column; }
+
+.res-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--pp-md);
+  padding: var(--pp-sm) 0;
+  border-bottom: 1px solid var(--pp-hairline-soft);
+}
+
+.res-item:last-child { border-bottom: 0; }
+
+.res-item small {
+  color: var(--pp-muted);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.area-grid {
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  border-top: 1px solid var(--pp-hairline);
+}
+
+.area-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pp-xxs);
+  padding: var(--pp-lg);
+  border: 0;
+  border-bottom: 1px solid var(--pp-hairline);
+  border-right: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: var(--pp-canvas);
+}
+
+.area-card strong {
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.3px;
+}
+
+.area-card span {
+  color: var(--pp-muted);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* ---------------------------------------------------------------- *
+ * 7. 任务层级、筛选与表单
+ * ---------------------------------------------------------------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--pp-sm) var(--pp-md);
+  margin: 0 0 var(--pp-lg);
+  padding: 0 0 var(--pp-md);
+  border-bottom: 1px solid var(--pp-hairline);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pp-xxs);
+  min-width: 132px;
+}
+
+.field label {
+  color: var(--pp-muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.filters .link-btn { margin-bottom: var(--pp-sm); }
+
+input[type="search"],
+select {
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: var(--pp-canvas);
+  color: var(--pp-body);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 300;
+}
+
+input[type="search"] { min-width: 210px; }
+
+input[type="search"]::placeholder { color: var(--pp-faint); }
+
+input[type="search"]:focus,
+select:focus {
+  border-color: var(--pp-ink);
+  outline: none;
+}
+
+.task-set { margin: 0 0 var(--pp-xl); }
+
+.task-set > h3 {
+  margin: 0 0 var(--pp-sm);
+  padding-bottom: var(--pp-xs);
+  border-bottom: 1px solid var(--pp-hairline);
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.3px;
+}
+
+.task-group { margin: 0 0 var(--pp-md); }
+
+.task-group > h4 {
+  margin: 0 0 var(--pp-xxs);
+  color: var(--pp-muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* 任务行：标题优先拿到宽度。
+   原来是 grid "minmax(0,1fr) auto"，右侧那组操作按钮（详情 / 在 Obsidian 打开 /
+   标记完成 / 完成并归档）按最大内容宽度占位；在半宽面板（例如 span-5 的
+   「知识缺口 / 学习计划」）里能把标题挤到只剩几个字宽，标题折行后每行只有几个字。
+   改成可换行的 flex：标题基准宽度 20em，放不下时操作按钮自己换到下一行。 */
+.task-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--pp-xs) var(--pp-md);
+  padding: var(--pp-sm) 0;
+  border-bottom: 1px solid var(--pp-hairline-soft);
+}
+
+.task-row:last-child { border-bottom: 0; }
+
+.task-main { flex: 1 1 20em; min-width: 0; }
+
+.task-title { display: block; }
+
+.task-meta { margin-top: var(--pp-xxs); }
+
+.task-actions {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--pp-xxs) var(--pp-sm);
+}
+
+/* ---------------------------------------------------------------- *
+ * 8. 今日任务监控与语义色
+ * ---------------------------------------------------------------- */
+
+/* 今日任务监控：今天的任务清单 + 今天/未来几天的负载柱 */
+.today-monitor { display: grid; gap: var(--pp-xs); padding: 0 0 var(--pp-sm); }
+
+.today-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--pp-xxs) var(--pp-sm);
+}
+
+.today-head strong { color: var(--pp-ink-1); font-size: 15px; }
+
+.today-load {
+  margin-left: auto;
+  color: var(--pp-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.today-load[data-over="true"] { color: var(--pp-danger); }
+
+.today-tasks { margin-top: var(--pp-xxs); }
+
+/* 今日任务行的标题允许换行：单行省略号会把长标题截成"只剩前几个字" */
+.today-line { flex-wrap: wrap; align-items: flex-start; }
+
+.today-line .task-line-title {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.timeline-label {
+  margin: var(--pp-xs) 0 var(--pp-xxs);
+  color: var(--pp-ink-3);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.day[data-today="true"] .day-label { color: var(--pp-coral); font-weight: 600; }
+.day[data-today="true"] .day-bar { border-color: rgba(255, 143, 163, 0.5); }
+
+/* ---------------------------------------------------------------- *
+ * 9. 语义色
+ * ---------------------------------------------------------------- */
+
+.timeline {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--pp-xs);
+  align-items: end;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--pp-xs);
+}
+
+.day-bar {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 92px;
+  border: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: var(--pp-canvas);
+  overflow: hidden;
+}
+
+.day-fill {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 0;
+  background: var(--pp-ink);
+}
+
+.day[data-overload="true"] .day-fill { background: var(--pp-danger); }
+
+.day-label {
+  color: var(--pp-muted);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.day-minutes {
+  color: var(--pp-faint);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.day[data-overload="true"] .day-minutes { color: var(--pp-danger); }
+
+/* ---------------------------------------------------------------- *
+ * 9. 抽屉
+ * ---------------------------------------------------------------- */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(10, 10, 10, 0.45);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  /* 92cqw 而不是 92vw：窄窗格里 92vw 会算出比窗格还宽的抽屉（460px 盖在 340px 的窗格上） */
+  width: min(460px, 92cqw);
+  overflow-y: auto;
+  padding: var(--pp-md) var(--pp-md) var(--pp-lg);
+  border-left: 1px solid var(--pp-hairline);
+  background: var(--pp-canvas);
+}
+
+.drawer[hidden] { display: none; }
+
+.drawer h2 {
+  margin: 0 0 var(--pp-xs);
+  color: var(--pp-ink);
+  font-family: var(--pp-serif);
+  font-size: 26px;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+}
+
+.drawer .drawer-close {
+  display: block;
+  margin-left: auto;
+}
+
+.drawer-section {
+  margin-top: var(--pp-md);
+  padding-top: var(--pp-sm);
+  border-top: 1px solid var(--pp-hairline);
+}
+
+.drawer-section h3 {
+  margin: 0 0 var(--pp-xs);
+  color: var(--pp-muted);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.drawer dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--pp-xs) var(--pp-md);
+  margin: 0;
+  font-size: 14px;
+}
+
+.drawer dt { color: var(--pp-muted); }
+
+.drawer dd { margin: 0; color: var(--pp-body); }
+
+.path-box {
+  padding: var(--pp-xs) 10px;
+  border: 1px solid var(--pp-hairline);
+  border-radius: 0;
+  background: var(--pp-canvas);
+  color: var(--pp-muted);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  overflow-wrap: anywhere;
+}
+
+.progress-line {
+  height: 1px;
+  margin-top: var(--pp-xs);
+  background: var(--pp-hairline);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.progress-line span {
+  display: block;
+  height: 1px;
+  background: var(--pp-ink);
+}
+
+/* ---------------------------------------------------------------- *
+ * 10. 响应式：<640 单栏；640–1024 两栏
+ * ---------------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  .masthead h1 {
+    font-size: 52px;
+    letter-spacing: -1.5px;
+  }
+
+  .kpi,
+  .span-3,
+  .span-4,
+  .span-5 { grid-column: span 6; }
+
+  .panel,
+  .span-6,
+  .span-7,
+  .span-8 { grid-column: span 12; }
+
+  /* 窄窗格里顶栏必须允许换行：.brand 是 flex:0 0 auto 的固定宽度，配合 nowrap 会把 .tabs
+     挤到 0 宽（实测 340px 窗格下 clientWidth=0，整排导航消失且不可点）。
+     注意不能给 .topbar 加 overflow-x:auto —— 它会把换行后的第二行（页签）裁在 60px 高的
+     盒子里，340/520px 窗格实测页签整排不可见（被下面的 hero 盖住，点也点不到）。
+     横向滚动交给 .tabs 自己。 */
+  .topbar { flex-wrap: wrap; }
+
+  .tabs { flex-wrap: nowrap; overflow-x: auto; }
+
+  .tab { flex: 0 0 auto; }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+
+  .view { padding-top: var(--pp-lg); }
+
+  .masthead h1 {
+    font-size: 36px;
+    letter-spacing: -0.8px;
+  }
+
+  .focus-strip { padding-left: var(--pp-md); }
+
+  .focus-strip strong { font-size: 22px; }
+
+  .kpi,
+  .span-3,
+  .span-4,
+  .span-5,
+  .span-6,
+  .span-7,
+  .span-8,
+  .span-12 { grid-column: span 12; }
+
+  .kpi { padding: var(--pp-md) var(--pp-sm) var(--pp-sm); }
+
+  .kpi-value { font-size: 36px; letter-spacing: -0.8px; }
+
+  .waypoints { grid-template-columns: 1fr; }
+
+  .waypoint { border-right: 0; }
+
+  .panel-head,
+  .panel-body,
+  .project-card,
+  .area-card { padding-left: var(--pp-md); padding-right: var(--pp-md); }
+
+  .task-main { flex-basis: 100%; }
+
+  .task-actions { justify-content: flex-start; }
+
+  .project-list { grid-template-columns: 1fr; }
+
+  .area-grid { grid-template-columns: 1fr; }
+
+  .area-card { border-right: 0; }
+
+  .timeline { gap: var(--pp-xxs); }
+
+  .day-bar { height: 70px; }
+
+  .date-chip { display: none; }
+
+  input[type="search"] { min-width: 0; width: 100%; }
+
+  .primary-btn { width: 100%; min-height: 48px; }
+
+  .drawer { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* MOTION.md 铁律 4：不能只把 duration 压到 0.001ms —— 带 animation-delay 的
+     交错序列会因此把内容压在半透明状态。必须是 animation / transition: none。 */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* =====================================================================
+ * 夜航极光 · Nightfall Aurora（v0.3.0 配色系统）
+ *
+ * 与 Obsidian 插件 styles.css 末尾的「夜航极光」段同源：第 0 节的设计令牌逐条镜像，
+ * 下面的组件规则只是把插件的 .pp-* 选择器换成这个静态站自己的
+ * topbar / tab / panel / kpi / hero / waypoint / drawer。第 1–10 节的极简主义
+ * 基线规则一行未动，本段全部是覆盖层。
+ *
+ * 设计目标：美观优先。保留「深夜书房」的深色血统，把配色、层级与质感整体重做。
+ *
+ *   0. 底色是带蓝调的墨紫，5 级抬升（bg-0…bg-4）：面板之间靠「层级 + 高光」区分，
+ *      而不是靠描边；深色界面里堆描边会显脏。
+ *   1. 描边用带紫调的半透明白，不用纯白 —— 纯白线在深紫底上会发灰。
+ *   2. 主色落日珊瑚 #ff8fa3（只在一处发光），结构色极光青 #5fe3c0，
+ *      信息色紫藤 #a78bfa，告警琥珀 #ffc46b，危险玫瑰 #ff5f7a。
+ *   3. 颜色只承担少量信息量：状态先靠形状与位置，颜色只做强调。
+ *   4. 玻璃面板 = 顶部一线高光 + 上亮下暗的极浅渐变 + 大范围柔和投影，做出「悬浮」感。
+ *   5. 数字用等宽数字（tabular-nums），标题用负字距，营造精密感。
+ *
+ * 遮罩强度与文字色仍由 assets/manifest.json 的实测平均亮度（data-tone="light"/"dark"）
+ * 分档：亮图用较通透的遮罩 + 深色文字，暗图用重遮罩 + 浅色文字。
+ * 想换配色：只改第 0 节令牌即可，下面所有规则都从令牌派生。
+ * ===================================================================== */
+
+/* =====================================================================
+ * 0. 设计令牌
+ * ===================================================================== */
+
+:root {
+  /* ---- 底色：5 级抬升 ---- */
+  --pp-bg-0: #0a0814;
+  --pp-bg-1: #110e1f;
+  --pp-bg-2: #171331;
+  --pp-bg-3: #201a3d;
+  --pp-bg-4: #2a2350;
+
+  /* ---- 描边：带紫调的半透明白 ---- */
+  --pp-line-1: rgba(163, 148, 255, 0.14);
+  --pp-line-2: rgba(163, 148, 255, 0.28);
+  --pp-line-3: rgba(255, 255, 255, 0.05);
+
+  /* ---- 文字：4 级 ---- */
+  --pp-ink-1: #f6f3ff;
+  --pp-ink-2: #cfc8e6;
+  --pp-ink-3: #9890b4;
+  /* 最弱一档文字也要过 AA：旧值 #6a6288 在墨紫底上只有 2.91–3.51:1，
+     日期 chip、抽屉字段名、表单标签、占位符、页脚全部因此不达标。新值 4.74–5.72:1。 */
+  --pp-ink-4: #8d85a8;
+
+  /* ---- 主色：落日珊瑚 ---- */
+  --pp-coral: #ff8fa3;
+  --pp-coral-hi: #ffb7c5;
+  --pp-coral-soft: rgba(255, 143, 163, 0.14);
+
+  /* ---- 结构色 / 语义色 ---- */
+  --pp-mint: #5fe3c0;
+  --pp-mint-soft: rgba(95, 227, 192, 0.14);
+  --pp-lilac: #a78bfa;
+  --pp-lilac-soft: rgba(167, 139, 250, 0.16);
+  --pp-amber: #ffc46b;
+  --pp-amber-soft: rgba(255, 196, 107, 0.14);
+  --pp-rose: #ff5f7a;
+  --pp-rose-soft: rgba(255, 95, 122, 0.14);
+
+  /* ---- 玻璃与投影 ---- */
+  --pp-glass: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.022));
+  --pp-glass-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.035));
+  --pp-lift-1: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 10px 28px rgba(4, 2, 12, 0.42);
+  --pp-lift-2: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 20px 48px rgba(4, 2, 12, 0.55);
+  --pp-glow: 0 0 0 1px var(--pp-coral-soft), 0 10px 30px rgba(255, 143, 163, 0.18);
+  /* 状态呼吸（ppd-pulse）的扩散色：显式定义成一个真令牌，而不是只活在 var() 的兜底里 ——
+     「看起来可配、实际配不到」的令牌是维护陷阱。 */
+  --pp-pulse-ring: rgba(255, 95, 122, 0.34);
+
+  /* ---- 渐变身份 ---- */
+  --pp-grad-cta: linear-gradient(120deg, #ff8fa3 0%, #ffb7c5 100%);
+  --pp-grad-active: linear-gradient(120deg, #ff8fa3 0%, #a78bfa 100%);
+  --pp-grad-fill: linear-gradient(90deg, #ff8fa3 0%, #a78bfa 100%);
+  --pp-grad-hero: linear-gradient(105deg, rgba(10, 8, 20, 0.94) 4%, rgba(23, 19, 49, 0.62) 48%, rgba(167, 139, 250, 0.14) 100%);
+  --pp-halo:
+    radial-gradient(920px 540px at 12% -10%, rgba(255, 143, 163, 0.18), transparent 62%),
+    radial-gradient(780px 500px at 92% 2%, rgba(167, 139, 250, 0.16), transparent 60%),
+    radial-gradient(940px 660px at 50% 112%, rgba(95, 227, 192, 0.10), transparent 62%);
+
+  /* ---- 圆角与节奏 ---- */
+  --pp-r-sm: 8px;
+  --pp-r-md: 12px;
+  --pp-r-lg: 16px;
+  --pp-r-xl: 20px;
+  --pp-r-pill: 999px;
+
+  /* ---- 兼容极简主义基线里的旧令牌名：全部指向新令牌，既有规则自动继承 ---- */
+  --pp-canvas: var(--pp-bg-0);
+  --pp-surface-light: var(--pp-bg-2);
+  --pp-surface-mid: var(--pp-bg-3);
+  --pp-ink: var(--pp-ink-1);
+  --pp-ink-soft: var(--pp-ink-1);
+  --pp-body: var(--pp-ink-2);
+  --pp-muted: var(--pp-ink-3);
+  --pp-faint: var(--pp-ink-4);
+  --pp-hairline: var(--pp-line-1);
+  --pp-hairline-soft: var(--pp-line-3);
+  --pp-on-ink: #1a1020;
+  --pp-success: var(--pp-mint);
+  --pp-warning: var(--pp-amber);
+  --pp-danger: var(--pp-rose);
+  --pp-accent: var(--pp-coral);
+  --pp-accent-strong: var(--pp-coral-hi);
+  --pp-accent-soft: var(--pp-coral-soft);
+  --pp-bar: rgba(255, 255, 255, 0.08);
+  --pp-shadow: var(--pp-lift-1);
+  --pp-shadow-lg: var(--pp-lift-2);
+
+  color-scheme: dark;
+}
+
+/* .theme-dark 也指向同一套取值：夜航极光本身就是深色，避免出现第二种深色 */
+.theme-dark {
+  --pp-canvas: var(--pp-bg-0);
+  --pp-surface-light: var(--pp-bg-2);
+  --pp-surface-mid: var(--pp-bg-3);
+  --pp-ink: var(--pp-ink-1);
+  --pp-ink-soft: var(--pp-ink-1);
+  --pp-body: var(--pp-ink-2);
+  --pp-muted: var(--pp-ink-3);
+  --pp-faint: var(--pp-ink-4);
+  --pp-hairline: var(--pp-line-1);
+  --pp-hairline-soft: var(--pp-line-3);
+  --pp-on-ink: #1a1020;
+  --pp-success: var(--pp-mint);
+  --pp-warning: var(--pp-amber);
+  --pp-danger: var(--pp-rose);
+  color-scheme: dark;
+}
+
+/* =====================================================================
+ * 1. 画布与外壳
+ * ===================================================================== */
+
+/* 页面底色：三层极光光晕 + 墨紫竖向渐变 */
+body {
+  background: var(--pp-halo), linear-gradient(180deg, #110e1f 0%, #0a0814 100%);
+  background-attachment: fixed;
+  color: var(--pp-ink-2);
+}
+
+/* 基线的 .app 用不透明底色铺满整页，会把 body 的光晕盖掉 */
+.app { background: transparent; }
+
+::selection { background: rgba(255, 143, 163, 0.26); color: var(--pp-ink-1); }
+
+/* =====================================================================
+ * 2. 顶部导航：胶囊 + 珊瑚/紫藤渐变高亮
+ * ===================================================================== */
+
+.topbar {
+  /* .app 是列向 flex 容器：不给 flex-shrink:0 时，内容比窗格高就会把顶栏压回 min-height 60px，
+     窄窗格里换行出来的第二行（页签）于是被挤出顶栏盒子、又被下面的 hero 盖住
+     （340/520px 实测整排导航不可见、也点不到）。顶栏与页脚按内容高度，只有正文区伸缩。 */
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--pp-line-3);
+  background: rgba(10, 8, 20, 0.82);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+.brand { color: var(--pp-ink-1); }
+.brand-text strong { color: var(--pp-ink-1); letter-spacing: -0.01em; }
+.brand-text small { color: var(--pp-ink-4); letter-spacing: 0.22em; }
+.date-chip { color: var(--pp-ink-3); }
+
+.tab {
+  padding: 7px 14px;
+  margin-right: 6px;
+  border: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  border-radius: var(--pp-r-pill);
+  background: transparent;
+  color: var(--pp-ink-3);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.tab:hover,
+.tab:focus-visible {
+  color: var(--pp-ink-1);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: var(--pp-line-1);
+  outline: none;
+}
+
+.tab[aria-current="page"] {
+  background: var(--pp-grad-active);
+  border-color: transparent;
+  color: #1a1020;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(255, 143, 163, 0.26);
+}
+
+.tab[aria-current="page"]:hover,
+.tab[aria-current="page"]:focus-visible {
+  color: #1a1020;
+  background: var(--pp-grad-active);
+  filter: brightness(1.05);
+}
+
+.tab-count { color: inherit; }
+
+.tab[aria-current="page"] .tab-count { color: #1a1020; }
+
+/* 主操作：珊瑚 → 浅珊瑚渐变胶囊 */
+.primary-btn {
+  border: 0;
+  border-radius: var(--pp-r-pill);
+  background: var(--pp-grad-cta);
+  color: #1a1020;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 20px rgba(255, 143, 163, 0.26);
+}
+
+.primary-btn:hover,
+.primary-btn:focus-visible {
+  background: var(--pp-grad-cta);
+  filter: brightness(1.06);
+  color: #1a1020;
+  outline: none;
+}
+
+.link-btn {
+  padding: 2px 8px;
+  border-bottom-color: transparent;
+  border-radius: var(--pp-r-pill);
+  color: var(--pp-coral);
+}
+
+.link-btn:hover,
+.link-btn:focus-visible {
+  color: var(--pp-coral-hi);
+  background: var(--pp-coral-soft);
+  border-bottom-color: transparent;
+  outline: none;
+}
+
+.row-title { color: var(--pp-ink-1); }
+.row-title:hover { color: var(--pp-coral-hi); }
+
+/* =====================================================================
+ * 3. 页首与头图横幅
+ * ===================================================================== */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 210px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  margin: 0 0 22px;
+  padding: 28px clamp(20px, 4cqw, 42px);
+  border: 1px solid var(--pp-line-2);
+  border-radius: var(--pp-r-xl);
+  background: var(--pp-grad-hero), linear-gradient(120deg, var(--pp-bg-3), var(--pp-bg-2));
+  background-position: center;
+  background-size: cover;
+  box-shadow: var(--pp-lift-2);
+}
+
+/* 取景**不改变**横幅形状：整屏宽下套 aspect-ratio 会把横幅拉成一大块
+   （用户报过"主页横幅突然变得很宽"）。取景由背景尺寸/位置负责：
+   宽度按取景框放大、纵向以取景中心为准 —— 横幅保持原来的矮条样式。 */
+
+/* 遮罩：暗图用重遮罩压住细节，亮图留出通透感；文字色由 tone 分档决定 */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--pp-grad-hero);
+}
+
+.hero[data-tone="light"]::before {
+  background: linear-gradient(105deg, rgba(10, 8, 20, 0.86) 4%, rgba(23, 19, 49, 0.46) 48%, rgba(167, 139, 250, 0.10) 100%);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -45% 42%;
+  z-index: -1;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(167, 139, 250, 0.42);
+  filter: blur(46px);
+  opacity: 0.9;
+}
+
+.hero-copy { max-width: 680px; }
+.hero .eyebrow { color: var(--pp-coral-hi); }
+
+.hero h1 {
+  margin: 10px 0 8px;
+  color: #ffffff;
+  font-size: clamp(1.7em, 3.4cqw, 2.7em);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 24px rgba(4, 2, 12, 0.6);
+}
+
+.hero-sub { margin: 0; color: rgba(255, 255, 255, 0.82); }
+
+.hero-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 0; }
+.hero-meta .eyebrow { color: rgba(255, 255, 255, 0.66); }
+
+/* =====================================================================
+ * 4. 统计卡与今日焦点
+ * ===================================================================== */
+
+/* 玻璃面板：上亮下暗的极浅渐变 + 1px 紫调描边 + 大范围柔和投影 */
+.panel,
+.kpi,
+.project-card,
+.task-set,
+.area-card,
+.path-box,
+.filters {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-lg);
+  background: var(--pp-glass);
+  box-shadow: var(--pp-lift-1);
+  backdrop-filter: blur(10px);
+}
+
+.panel { overflow: hidden; }
+.panel-head { border-bottom: 1px solid var(--pp-line-3); }
+.panel-head h2, .panel h2 { color: var(--pp-ink-1); letter-spacing: -0.01em; }
+.panel-head p { color: var(--pp-ink-3); }
+
+.kpi {
+  position: relative;
+  overflow: hidden;
+  min-height: 104px;
+  padding: 18px 20px;
+  /* 悬停位移统一走 --pp-mo-lift（MOTION.md 第 1 节），这样两个渲染面抬升幅度一致 */
+  transition: transform var(--pp-mo-fast) var(--pp-mo-ease), border-color var(--pp-mo-fast) var(--pp-mo-ease), box-shadow var(--pp-mo-fast) var(--pp-mo-ease);
+}
+
+.kpi:hover {
+  transform: translateY(var(--pp-mo-lift, -3px));
+  border-color: var(--pp-line-2);
+  box-shadow: var(--pp-lift-2);
+}
+
+/* 顶部一线渐变色带：比左侧色条更克制，也更有整体感 */
+.kpi::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: var(--pp-grad-fill);
+  opacity: 0.9;
+}
+
+.kpi:nth-child(2)::after { background: linear-gradient(90deg, var(--pp-lilac), var(--pp-mint)); }
+.kpi:nth-child(3)::after { background: linear-gradient(90deg, var(--pp-rose), var(--pp-amber)); }
+.kpi:nth-child(4)::after { background: linear-gradient(90deg, var(--pp-mint), var(--pp-lilac)); }
+
+.kpi-value {
+  color: var(--pp-ink-1);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.kpi-label, .kpi-hint { color: var(--pp-ink-3); }
+.kpi-hint { letter-spacing: 0.06em; }
+
+/* 进度条：底 rgba(255,255,255,.08)，填充珊瑚 → 紫藤 */
+.kpi-bar,
+.progress-bar,
+.drawer .progress-line {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--pp-r-pill);
+  overflow: hidden;
+}
+
+.kpi-bar { height: 4px; }
+.kpi-bar span { display: block; height: 100%; background: var(--pp-grad-fill); border-radius: inherit; }
+
+.progress-bar { height: 6px; }
+.progress-fill { display: block; height: 6px; background: var(--pp-grad-fill); border-radius: inherit; }
+.progress-value { color: var(--pp-ink-1); font-variant-numeric: tabular-nums; }
+
+/* 项目卡：解除基线里 1px 容器对百分比文字的裁切，改成「百分比 + 6px 进度条」 */
+.project-card .progress-line { height: auto; overflow: visible; background: transparent; }
+
+.drawer .progress-line { height: 6px; margin-top: var(--pp-sm); }
+.drawer .progress-line > span { display: block; height: 100%; background: var(--pp-grad-fill); border-radius: inherit; }
+
+/* 今日焦点：左侧 3px 珊瑚边 + 珊瑚到紫藤的极浅渐变 */
+.focus-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  border: 1px solid rgba(255, 143, 163, 0.30);
+  border-left: 3px solid var(--pp-coral);
+  border-radius: var(--pp-r-lg);
+  background: linear-gradient(96deg, rgba(255, 143, 163, 0.13), rgba(167, 139, 250, 0.07) 58%, transparent);
+  box-shadow: var(--pp-lift-1);
+}
+
+.focus-strip .eyebrow { color: var(--pp-coral-hi); font-weight: 600; letter-spacing: 0.14em; }
+.focus-strip strong { color: var(--pp-ink-1); letter-spacing: -0.01em; }
+.focus-hint { color: var(--pp-ink-3); }
+
+/* =====================================================================
+ * 5. 图像导航卡
+ * ===================================================================== */
+
+.waypoints { gap: 14px; margin-bottom: 22px; border-top: 0; }
+
+.waypoint {
+  /* 图片遮罩 ::before 用 absolute + inset:0：卡片必须是包含块，否则伪元素会按初始包含块
+     撑成整页大小（实测 1100×2300 而不是 315×168），遮罩等于失效。isolation 让 z-index:-1
+     的伪元素停在卡片自己的堆叠上下文里，不会沉到宿主背景之下。 */
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 168px;
+  padding: 20px;
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-xl);
+  background: linear-gradient(120deg, var(--pp-bg-3), var(--pp-bg-2));
+  background-position: center;
+  background-size: cover;
+  color: var(--pp-ink-1);
+  text-align: left;
+  transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 200ms ease, border-color 200ms ease;
+}
+
+/* 基线给最后一列去掉了右边框；这里面板本身有完整描边，需要补回来 */
+.waypoint:last-child { border-right: 1px solid var(--pp-line-1); }
+
+.waypoint::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(10, 8, 20, 0.10) 0%, rgba(10, 8, 20, 0.72) 58%, rgba(10, 8, 20, 0.94) 100%);
+}
+
+/* 亮图：遮罩更通透，文字转深色 */
+.waypoint[data-tone="light"]::before {
+  background: linear-gradient(180deg, rgba(246, 243, 255, 0.10) 0%, rgba(246, 243, 255, 0.58) 58%, rgba(246, 243, 255, 0.90) 100%);
+}
+
+.waypoint[data-tone="light"] .waypoint-title { color: #1a1020; }
+.waypoint[data-tone="light"] .waypoint-description { color: rgba(26, 16, 32, 0.78); }
+.waypoint[data-tone="dark"] .waypoint-title { color: #ffffff; }
+.waypoint[data-tone="dark"] .waypoint-description { color: rgba(255, 255, 255, 0.80); }
+
+.waypoint:hover,
+.waypoint:focus-visible {
+  transform: translateY(var(--pp-mo-lift, -3px));
+  border-color: rgba(255, 143, 163, 0.5);
+  box-shadow: var(--pp-glow), var(--pp-lift-2);
+  outline: none;
+}
+
+.waypoint-eyebrow { color: var(--pp-coral-hi); font-weight: 600; letter-spacing: 0.16em; }
+.waypoint-title { letter-spacing: -0.015em; }
+.waypoint-description { font-size: 0.95em; }
+
+/* =====================================================================
+ * 6. 列表与行
+ * ===================================================================== */
+
+.task-set { padding: 18px 20px; }
+.task-set > h3, .task-group > h4 { color: var(--pp-ink-4); letter-spacing: 0.06em; }
+
+.project-card { padding: 18px; }
+.project-head h3, .project-head .row-title { color: var(--pp-ink-1); }
+.project-sub { color: var(--pp-ink-3); }
+.project-outcome { color: var(--pp-ink-2); }
+.project-foot { border-top: 1px solid var(--pp-line-3); }
+
+.task-row { border-bottom: 1px solid var(--pp-line-3); }
+.task-row:hover { background: linear-gradient(90deg, rgba(255, 143, 163, 0.06), rgba(255, 255, 255, 0.02)); }
+.task-title { color: var(--pp-ink-1); }
+.task-meta, .meta-row { color: var(--pp-ink-3); }
+
+/* 已完成的任务：留在列表里（排序把它沉到任务组底部），名字打删除线并转灰。
+   只弱化"名字 + 元信息"，不整行降透明度 —— 日期/项目仍要能看清。 */
+.task-row.is-done .task-title,
+.task-line.is-done .task-line-title { text-decoration: line-through; color: var(--pp-faint); }
+.task-row.is-done .task-meta { opacity: 0.72; }
+.task-row.is-done .task-line-due { opacity: 0.8; }
+
+/* 「撤销」= 撤回上一次「本周期完成」：用强调色点出来，但仍是弱按钮，不和主操作抢注意力 */
+.task-actions .is-undo { color: var(--pp-coral); }
+.task-actions .is-undo:hover { text-decoration: underline; }
+
+.res-item { border-bottom: 1px solid var(--pp-line-3); }
+.res-item:hover { background: rgba(255, 255, 255, 0.04); }
+
+.empty { color: var(--pp-ink-3); }
+.empty strong { color: var(--pp-ink-2); }
+.path-box { color: var(--pp-ink-3); }
+.area-card strong { color: var(--pp-ink-1); }
+.area-card span { color: var(--pp-ink-3); }
+
+/* 徽标：按 data-status / data-tone 上色，底为对应 -soft，描边同色 34% */
+.chip {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-pill);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--pp-ink-3);
+}
+
+.chip[data-status="planning"],
+.chip[data-status="todo"] {
+  background: var(--pp-lilac-soft);
+  border-color: rgba(167, 139, 250, 0.34);
+  color: var(--pp-lilac);
+}
+
+.chip[data-status="doing"],
+.chip[data-status="active"] {
+  background: var(--pp-mint-soft);
+  border-color: rgba(95, 227, 192, 0.34);
+  color: var(--pp-mint);
+}
+
+.chip[data-status="blocked"],
+.chip[data-status="expired"] {
+  background: var(--pp-rose-soft);
+  border-color: rgba(255, 95, 122, 0.36);
+  color: var(--pp-rose);
+}
+
+.chip[data-status="paused"] {
+  background: var(--pp-amber-soft);
+  border-color: rgba(255, 196, 107, 0.34);
+  color: var(--pp-amber);
+}
+
+.chip[data-status="done"],
+.chip[data-status="completed"],
+.chip[data-status="archived"],
+.chip[data-tone="muted"] {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--pp-line-1);
+  color: var(--pp-ink-2);
+}
+
+.chip[data-tone="warn"],
+.chip[data-priority="medium"] {
+  background: var(--pp-amber-soft);
+  border-color: rgba(255, 196, 107, 0.34);
+  color: var(--pp-amber);
+}
+
+.chip[data-tone="danger"],
+.chip[data-priority="high"] {
+  background: var(--pp-rose-soft);
+  border-color: rgba(255, 95, 122, 0.36);
+  color: var(--pp-rose);
+}
+
+.chip[data-priority="low"] {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--pp-line-1);
+  color: var(--pp-ink-4);
+}
+
+/* 时间规划柱状：底槽 + 珊瑚/紫藤与玫瑰/琥珀两组渐变 */
+.timeline .day-bar {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-md);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.timeline .day-fill {
+  background: linear-gradient(180deg, var(--pp-coral), var(--pp-lilac));
+  border-radius: inherit;
+}
+
+.timeline .day[data-overload="true"] .day-fill {
+  background: linear-gradient(180deg, var(--pp-rose), var(--pp-amber));
+}
+
+.timeline .day-label, .timeline .day-minutes { color: var(--pp-ink-3); }
+.timeline .day[data-overload="true"] .day-minutes { color: var(--pp-rose); }
+
+/* =====================================================================
+ * 7. 表单与筛选
+ * ===================================================================== */
+
+.filters { padding: 18px 20px; border-bottom: 1px solid var(--pp-line-1); }
+
+.field label { color: var(--pp-ink-4); letter-spacing: 0.06em; }
+
+input[type="search"],
+select,
+.field input,
+.field select {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-pill);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--pp-ink-2);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+input[type="search"]:focus,
+select:focus,
+.field input:focus,
+.field select:focus {
+  border-color: rgba(255, 143, 163, 0.55);
+  box-shadow: 0 0 0 3px var(--pp-coral-soft);
+  outline: none;
+}
+
+input[type="search"]::placeholder,
+.field input::placeholder { color: var(--pp-ink-4); }
+
+/* =====================================================================
+ * 8. 详情抽屉与页脚
+ * ===================================================================== */
+
+.drawer {
+  border-left: 1px solid var(--pp-line-2);
+  background: linear-gradient(180deg, rgba(23, 19, 49, 0.96), rgba(17, 14, 31, 0.96));
+  box-shadow: 0 30px 80px rgba(4, 2, 12, 0.65);
+  backdrop-filter: blur(16px);
+  color: var(--pp-ink-2);
+}
+
+.drawer h2, .drawer-section h3 { color: var(--pp-ink-1); }
+.drawer dt { color: var(--pp-ink-4); }
+.drawer dd { color: var(--pp-ink-2); }
+.drawer-section { border-top: 1px solid var(--pp-line-3); }
+
+.scrim { background: rgba(6, 4, 14, 0.62); }
+
+.footer { border-top: 1px solid var(--pp-line-1); color: var(--pp-ink-3); flex: 0 0 auto; }
+.footer strong { color: var(--pp-ink-1); }
+.footer code {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-sm);
+  color: var(--pp-coral-hi);
+}
+
+/* =====================================================================
+ * 10. 空库引导
+ * ===================================================================== */
+
+/* 整库没有项目也没有任务时出现：光看空面板会让人以为「插件坏了」，
+   这里直接说明数据从哪来、下一步点哪里。 */
+.onboarding {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 22px;
+  padding: 20px 22px;
+  border: 1px solid var(--pp-line-2);
+  border-radius: var(--pp-r-xl);
+  background: var(--pp-glass), linear-gradient(120deg, var(--pp-bg-3), var(--pp-bg-2));
+  box-shadow: var(--pp-lift-1);
+}
+
+.onboarding strong {
+  color: var(--pp-ink-1);
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.onboarding .onboarding-hint {
+  color: var(--pp-ink-3);
+  font-size: 13px;
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* =====================================================================
+ * 9. 滚动条、动效与响应式
+ * ===================================================================== */
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 143, 163, 0.22); border-radius: var(--pp-r-pill); }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 143, 163, 0.34); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* 悬停位移一并归零：只关动画不够，位移来自 :hover 的 transform */
+  .waypoint:hover, .waypoint:focus-visible, .kpi:hover, .kpi:focus-visible,
+  .primary-btn:hover, .primary-btn:focus-visible, .primary-btn:active { transform: none; }
+  /* 指针跟随光晕：减少动效环境下不出现（它只靠动效表达，也拿不到有意义的指针位置） */
+  .kpi::before, .waypoint::after { opacity: 0 !important; }
+}
+
+@media (max-width: 1024px) {
+  .waypoints { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .hero { min-height: 160px; padding: 22px 18px; border-radius: var(--pp-r-lg); }
+  .hero h1 { font-size: 1.6em; }
+  .waypoints { grid-template-columns: 1fr; }
+  .waypoint { min-height: 132px; }
+  .focus-strip .link-btn { margin-left: 0; }
+  /* 窄窗格里页签溢出成横向滚动条：右侧渐隐提示"还有页签在右边"。
+     没有这个提示时，375px 窗格里只看得见前 4 个页签，用户根本不知道「数据」页签存在。 */
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 16px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 16px), transparent 100%);
+  }
+  .tab { flex: 0 0 auto; margin-right: 4px; }
+}
+
+/* =====================================================================
+ * 11. 浅色主题：跟随 Obsidian（moonstone 等浅色主题）
+ *
+ * 深色血统的夜航极光在浅色 Obsidian 里是一个突兀的深色孤岛，所以这里给出同一套令牌的
+ * 浅色取值：纸白 5 级抬升 + 4 级深墨 + 压深一档的强调色。只重映射令牌与少量写死的深色底
+ * （顶栏 / 抽屉 / 遮罩），其余组件规则一行不动 —— 这套设计本来就是令牌驱动的。
+ * 图片上的遮罩（hero / waypoint）保持深色：它们压在照片上，白字才读得清。
+ * 对比度：最弱一档文字 5.5:1（@ bg-3），正文 12:1 以上，AA 全部通过。
+ * ===================================================================== */
+
+.theme-light {
+  --pp-bg-0: #f2f2f4;
+  --pp-bg-1: #fbfbfc;
+  --pp-bg-2: #ffffff;
+  --pp-bg-3: #f4f4f6;
+  --pp-bg-4: #e9e9ef;
+
+  --pp-line-1: rgba(24, 18, 44, 0.14);
+  --pp-line-2: rgba(24, 18, 44, 0.26);
+  --pp-line-3: rgba(24, 18, 44, 0.06);
+
+  --pp-ink-1: #14111d;
+  --pp-ink-2: #2f2b3c;
+  --pp-ink-3: #4a4658;
+  --pp-ink-4: #625e78;
+
+  --pp-coral: #c93b58;
+  --pp-coral-hi: #e26a83;
+  --pp-coral-soft: rgba(201, 59, 88, 0.12);
+
+  --pp-mint: #137a5b;
+  --pp-mint-soft: rgba(19, 122, 91, 0.12);
+  --pp-lilac: #5b46c8;
+  --pp-lilac-soft: rgba(91, 70, 200, 0.12);
+  --pp-amber: #8f5200;
+  --pp-amber-soft: rgba(143, 82, 0, 0.12);
+  --pp-rose: #b3223c;
+  --pp-rose-soft: rgba(179, 34, 60, 0.12);
+
+  --pp-glass: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72));
+  --pp-glass-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.88));
+  --pp-lift-1: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 8px 24px rgba(20, 16, 40, 0.10);
+  --pp-lift-2: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 16px 40px rgba(20, 16, 40, 0.16);
+  --pp-glow: 0 0 0 1px rgba(201, 59, 88, 0.18), 0 8px 24px rgba(201, 59, 88, 0.14);
+  --pp-pulse-ring: rgba(179, 34, 60, 0.34);
+
+  --pp-grad-cta: linear-gradient(120deg, #c93b58 0%, #e26a83 100%);
+  --pp-grad-active: linear-gradient(120deg, #c93b58 0%, #5b46c8 100%);
+  --pp-grad-fill: linear-gradient(90deg, #c93b58 0%, #5b46c8 100%);
+  --pp-halo:
+    radial-gradient(920px 540px at 12% -10%, rgba(201, 59, 88, 0.10), transparent 62%),
+    radial-gradient(780px 500px at 92% 2%, rgba(91, 70, 200, 0.09), transparent 60%),
+    radial-gradient(940px 660px at 50% 112%, rgba(19, 122, 91, 0.07), transparent 62%);
+
+  --pp-on-ink: #ffffff;
+
+  /* 动效节奏：浅色与深色取值**相同**（MOTION.md 第 1 节：两个令牌块都要有） */
+  --pp-mo-instant: 90ms;
+  --pp-mo-fast: 140ms;
+  --pp-mo-base: 220ms;
+  --pp-mo-slow: 380ms;
+  --pp-mo-enter: 480ms;
+  --pp-mo-ambient: 14s;
+  --pp-mo-stagger: 45ms;
+  --pp-mo-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --pp-mo-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pp-mo-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pp-mo-lift: -3px;
+
+  color-scheme: light;
+
+  /* Aurora 的页面底色是写死的墨紫竖向渐变（浏览器版作用在 body 上，插件里就是 :host），
+     只换令牌换不掉它 —— 浅色主题下整个画布会保持深色，看起来像只有顶栏变浅了。 */
+  background: var(--pp-halo), linear-gradient(180deg, #fbfbfc 0%, #f2f2f4 100%);
+  background-attachment: fixed;
+}
+
+/* 这几处原本写死了墨紫底，浅色主题下必须换掉，否则仍是深色块 */
+.theme-light .topbar { background: rgba(255, 255, 255, 0.86); border-bottom-color: var(--pp-line-3); }
+.theme-light .drawer { background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(248, 248, 251, 0.97)); }
+.theme-light .scrim { background: rgba(24, 18, 44, 0.32); }
+.theme-light .footer code { background: rgba(24, 18, 44, 0.05); }
+.theme-light ::selection { background: rgba(201, 59, 88, 0.20); color: var(--pp-ink-1); }
+
+/* ------------------------------------------------------------------ *
+ * 13. 阻塞与任务状态（任务级）
+ * 阻塞是任务的状态之一（规划中 / 待办 / 完成 / 阻塞），不再有独立的阻塞项卡片：
+ * 项目卡片右上角的红点数字、关键节点标红，都由"该项目里有多少 blocked 任务"推导。
+ * ------------------------------------------------------------------ */
+
+.project-card { position: relative; }
+
+.project-card .blocked-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--pp-danger);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 3px rgba(255, 107, 129, 0.16);
+}
+
+/* 关键节点（含阻塞任务）整体标红 */
+.chip[data-tone="blocked"] {
+  border-color: var(--pp-danger);
+  color: var(--pp-danger);
+  background: rgba(255, 107, 129, 0.12);
+}
+
+.res-item.is-blocked {
+  padding-left: 10px;
+  border-left: 3px solid var(--pp-danger);
+}
+
+.res-item.is-blocked > span { color: var(--pp-danger); }
+
+/* 任务状态四选一 */
+.status-picker {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-option {
+  padding: 4px 12px;
+  border: 1px solid var(--pp-hairline);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pp-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.status-option:hover {
+  border-color: var(--pp-line-2);
+  color: var(--pp-ink-1);
+}
+
+.status-option.is-active {
+  border-color: var(--pp-coral);
+  background: var(--pp-coral-soft);
+  color: var(--pp-coral-hi);
+}
+
+.status-option[data-status="done"].is-active {
+  border-color: var(--pp-success);
+  background: rgba(76, 217, 158, 0.14);
+  color: var(--pp-success);
+}
+
+.status-option[data-status="blocked"].is-active {
+  border-color: var(--pp-danger);
+  background: rgba(255, 107, 129, 0.14);
+  color: var(--pp-danger);
+}
+
+.status-picker-hint {
+  margin: 8px 0 0;
+  color: var(--pp-muted);
+  font-size: 12px;
+}
+/* 项目详情：关键节点导航条（每个节点一个页签，下面挂该节点的任务） */
+.milestone-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: var(--pp-sm);
+}
+
+.milestone-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--pp-hairline);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pp-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.milestone-tab:hover { border-color: var(--pp-line-2); color: var(--pp-ink-1); }
+
+.milestone-tab.is-active {
+  border-color: var(--pp-coral);
+  background: var(--pp-coral-soft);
+  color: var(--pp-coral-hi);
+}
+
+/* 含阻塞任务的节点整体标红 */
+.milestone-tab.is-blocked {
+  border-color: var(--pp-danger);
+  color: var(--pp-danger);
+}
+
+.milestone-tab.is-blocked.is-active {
+  background: rgba(255, 107, 129, 0.16);
+}
+
+.milestone-count {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+}
+
+.milestone-body { margin-bottom: var(--pp-sm); }
+
+/* 关键节点 / 孤立任务里的任务列表：一条任务只占一行，省空间。
+   以前一条任务摊开 7–9 个标签，窄抽屉里每个标签各占一行 —— 单条能撑到 350px+。 */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--pp-hairline-soft);
+}
+
+.task-line {
+  display: flex;
+  align-items: center;
+  gap: var(--pp-xs);
+  min-height: 28px;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--pp-hairline-soft);
+}
+
+.task-line:hover,
+.task-line:focus-within { background: var(--pp-surface-light); }
+
+.task-line-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-left: 2px;
+  border-radius: 50%;
+  background: var(--pp-faint);
+}
+
+.task-line-dot[data-status="planning"] { background: var(--pp-muted); }
+.task-line-dot[data-status="todo"],
+.task-line-dot[data-status="doing"] { background: var(--pp-ink); }
+.task-line-dot[data-status="done"],
+.task-line-dot[data-status="completed"] { background: var(--pp-success); }
+.task-line-dot[data-status="blocked"],
+.task-line-dot[data-status="expired"] { background: var(--pp-danger); }
+.task-line-dot[data-status="archived"] { background: var(--pp-hairline); }
+
+.task-line-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pp-ink);
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.task-line-title:hover { text-decoration: underline; }
+
+.task-line[data-status="done"] .task-line-title,
+.task-line[data-status="archived"] .task-line-title {
+  color: var(--pp-muted);
+  text-decoration: line-through;
+}
+
+.task-line-meta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pp-xs);
+  color: var(--pp-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.task-line-due[data-tone="overdue"] { color: var(--pp-danger); }
+.task-line-due[data-tone="today"] { color: var(--pp-warning); }
+.task-line-priority { color: var(--pp-danger); }
+.task-line-note { max-width: 12ch; overflow: hidden; text-overflow: ellipsis; }
+.task-line-note[data-tone="blocked"] { color: var(--pp-danger); }
+
+.task-line-act {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--pp-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.task-line:hover .task-line-act,
+.task-line:focus-within .task-line-act { border-color: var(--pp-hairline); color: var(--pp-ink); }
+.task-line-act:hover { border-color: var(--pp-ink); }
+
+/* 任务抽屉左上角的返回箭头（从项目详情点进来时出现） */
+.drawer-back {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  z-index: 2;
+}
+/* ------------------------------------------------------------------ *
+ * 14. 详情页字段直改 + 任务拆解编辑
+ * 目标是"看着还是文档，点进去就能改"：控件平时近乎透明，悬停/聚焦才显出边界。
+ * ------------------------------------------------------------------ */
+
+.field-list { display: flex; flex-direction: column; gap: 10px; }
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 26px;
+}
+
+.field-label {
+  flex: 0 0 108px;
+  color: var(--pp-muted);
+  font-size: 12px;
+}
+
+.field-readonly-row { gap: 10px; }
+
+.field-readonly {
+  flex: 1 1 auto;
+  color: var(--pp-ink-2);
+  font-size: 13px;
+}
+
+.field-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--pp-r-sm, 6px);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--pp-ink-1);
+  font: inherit;
+  font-size: 13px;
+}
+
+.field-input:hover { border-color: var(--pp-hairline); background: rgba(255, 255, 255, 0.06); }
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--pp-coral);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px var(--pp-coral-soft);
+}
+
+.field-textarea { resize: vertical; line-height: 1.5; }
+
+/* 多选（重复周几）：一组复选框排成一行，窄窗格里自动换行。
+   选中态不靠颜色单独表达 —— 勾选框本身就在，focus-visible 也另给轮廓。 */
+.field-multi {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.field-multi-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--pp-ink-2);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.field-multi-item:hover { color: var(--pp-ink-1); }
+
+.field-multi-item input { margin: 0; }
+
+.field-multi-item input:focus-visible { outline: 2px solid var(--pp-coral); outline-offset: 2px; }
+
+.field-hint { margin: 10px 0 0; color: var(--pp-faint); font-size: 12px; }
+
+.checklist { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.checklist-row { display: flex; align-items: center; gap: 8px; }
+
+.checklist-row.is-done .checklist-text { color: var(--pp-muted); text-decoration: line-through; }
+
+.checklist-toggle {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--pp-hairline);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--pp-ink-1);
+  cursor: pointer;
+}
+
+.checklist-toggle:hover { border-color: var(--pp-coral); color: var(--pp-coral-hi); }
+
+.checklist-remove { flex: 0 0 auto; opacity: 0.65; }
+
+.checklist-remove:hover { opacity: 1; }
+/* 可点的节点 chip（项目卡上）：平时和普通 chip 一样，悬停/聚焦才显出可点 */
+.chip-button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.chip-button:hover,
+.chip-button:focus-visible {
+  border-color: var(--pp-coral);
+  color: var(--pp-coral-hi);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--pp-coral-soft);
+}
+/* 今日焦点条：分桶计数 + 接下来三条（每条可就地标记完成） */
+.focus-counts { margin-top: 10px; }
+
+.focus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.focus-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.focus-item .row-title { flex: 1 1 auto; min-width: 0; text-align: left; }
+
+.focus-empty { margin: 12px 0 0; color: var(--pp-muted); font-size: 13px; }
+/* 草稿箱多选与内联字段（周维护：导入为任务集） */
+.draft-check {
+  flex: 0 0 auto;
+  margin-right: 8px;
+}
+
+.field-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pp-muted);
+  font-size: 12px;
+}
+
+.field-inline .field-input {
+  width: 110px;
+  flex: 0 0 auto;
+}
+/* 窄窗格：工具条（筛选项、内联输入、按钮）整行放到标题下面，否则标题区会被挤成竖排文字 */
+@container (max-width: 560px) {
+  .panel-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .panel-tools {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .field-inline {
+    flex: 1 1 auto;
+  }
+
+  .field-inline .field-input {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+/* 项目卡上的批量勾选框：浮在卡片左上角，不参与卡片布局 */
+.card-check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}
+
+.project-card {
+  position: relative;
+}
+/* 数据页签的范围开关（全部 / 只看归档 / 只看在办） */
+.filters .link-btn.is-active {
+  color: var(--pp-ink-1);
+  border-color: var(--pp-coral);
+  background: var(--pp-coral-soft);
+}
+/* 上次批量操作的失败条：跨整行、可重试 */
+.bulk-failure {
+  border-color: var(--pp-warn, #d98a4a);
+  background: var(--pp-bg-2, var(--background-secondary));
+}
+
+.bulk-failure h2 {
+  font-size: 18px;
+}
+/* 可点的 KPI 卡：整卡是按钮，但外观保持卡片 */
+.kpi-link {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.kpi-link:hover,
+.kpi-link:focus-visible {
+  border-color: var(--pp-coral);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--pp-coral-soft);
+}
+
+/* =====================================================================
+ * 15. 夜航极光 · 流动（Aurora Motion）— 契约见仓库根目录 MOTION.md
+ *
+ * 铁律（逐条对应 MOTION.md 第 0 节）：
+ *   1. 关键帧的终点 = 元素的静态状态；入场一律 animation-fill-mode: backwards
+ *      （禁止 forwards）。动画没跑（被打断 / off / 减少动效）时界面必须完整可见。
+ *   2. 只动 transform / opacity / filter / background-position / box-shadow。
+ *   3. 入场只在「首次渲染 / 真正换页签」时播：mo-enter 由渲染层挂（app.js 的
+ *      syncEnter），setData / vault 刷新不挂。
+ *   4. 尊重 prefers-reduced-motion 与 data-motion（见文件前面的两个 @media 块
+ *      与本节末尾的降级覆盖）。
+ *   5. 不做退场动画：抽屉关闭仍是立即 hidden。
+ *   6. 任何状态都不只靠动效表达（数字、进度、徽标都另有静态终值）。
+ *
+ * 强度开关由渲染层写在 .app / .drawer / .scrim 上（每次 render 同步）：
+ *   · 缺省 / "full" → 下面的规则无条件生效；
+ *   · "subtle"      → 关环境类与指针跟随、位移减半、stagger 归零、入场 260ms；
+ *   · "off"         → animation / transition 全部 none，悬停位移归零。
+ *
+ * 本节不新增宽度断点；响应式仍是文件前面的 @media (max-width: …)。
+ * ===================================================================== */
+
+/* ------------------------------------------------------------------ *
+ * 15.0 关键帧（名字与插件 styles.css 逐字一致 —— MOTION.md 第 2 节）
+ * 注意：@keyframes 块内是安全的，from { / 50% { 不会被插件的 Shadow 适配改写。
+ * ------------------------------------------------------------------ */
+
+@keyframes ppd-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes ppd-rise-sm {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes ppd-pop {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes ppd-slide-in {
+  from { opacity: 0; transform: translate3d(-10px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes ppd-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ppd-grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes ppd-sheen {
+  from { background-position: -140% 0; }
+  to { background-position: 220% 0; }
+}
+
+@keyframes ppd-halo {
+  from { transform: scale(1) rotate(0deg); }
+  to { transform: scale(1.08) rotate(3deg); }
+}
+
+@keyframes ppd-kenburns {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.06); }
+}
+
+@keyframes ppd-pulse {
+  /* 契约里起点色是占位「同色 34%」：这个面色用真令牌 --pp-pulse-ring 表达
+     （深/浅主题各取自己 --pp-rose 的 34%），而不是 currentColor ——
+     .blocked-badge / .task-line-dot 的文字色是白/近白，用 currentColor 会把呼吸环
+     变成白色，那既不符合"危险"的语义，也和插件面（那三个播放者的 currentColor
+     恰好就是语义色）不是同一件事。这一条因此登记为跨面表述差异，只做语义断言。 */
+  from { box-shadow: 0 0 0 0 var(--pp-pulse-ring, rgba(255, 95, 122, 0.34)); }
+  to { box-shadow: 0 0 0 7px transparent; }
+}
+
+@keyframes ppd-shimmer {
+  from { background-position: -160% 0; }
+  to { background-position: 160% 0; }
+}
+
+@keyframes ppd-flash {
+  from { filter: brightness(1); }
+  50% { filter: brightness(1.35); }
+  to { filter: brightness(1); }
+}
+
+@keyframes ppd-march {
+  from { background-position: 0 0; }
+  to { background-position: 16px 0; }
+}
+
+@keyframes ppd-check {
+  from { transform: scale(0.86); }
+  50% { transform: scale(1.12); }
+  to { transform: scale(1); }
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.1 整页交错入场（分镜 1）与面板内列表行入场（分镜 2）
+ * mo-enter 由渲染层挂在 #view 上，且只在首次渲染 / 真正换页签时出现。
+ * ------------------------------------------------------------------ */
+
+.view.mo-enter > *,
+.view.mo-enter .grid > * {
+  animation: ppd-rise var(--pp-mo-enter) var(--pp-mo-ease-out) backwards;
+}
+
+.view.mo-enter .panel-body > *,
+.view.mo-enter .res-list > *,
+.view.mo-enter .task-list > *,
+.view.mo-enter .focus-list > *,
+.view.mo-enter .project-list > *,
+.view.mo-enter .task-group > .task-row {
+  animation: ppd-rise-sm var(--pp-mo-enter) var(--pp-mo-ease-out) backwards;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.2 统计卡弹入（分镜 3）与图像导航卡弹入（分镜 4）
+ * 这两条必须写在上面的 ppd-rise 之后：选择器权重相同，靠书写顺序取胜。
+ * ------------------------------------------------------------------ */
+
+.view.mo-enter .kpi {
+  animation: ppd-pop var(--pp-mo-enter) var(--pp-mo-ease-out) backwards;
+}
+
+.view.mo-enter .waypoint {
+  animation: ppd-pop var(--pp-mo-enter) var(--pp-mo-ease-out) backwards;
+}
+
+/* 交错：第 N 个子元素晚 (N-1) × --pp-mo-stagger。
+   必须写在所有 animation 简写之后，否则会被简写里的 animation-delay: 0 覆盖。
+   11 个及以后的元素不再延迟（长列表不做无限拖尾）。 */
+.view.mo-enter > *:nth-child(2),
+.view.mo-enter .grid > *:nth-child(2),
+.view.mo-enter .panel-body > *:nth-child(2),
+.view.mo-enter .res-list > *:nth-child(2),
+.view.mo-enter .task-list > *:nth-child(2),
+.view.mo-enter .focus-list > *:nth-child(2),
+.view.mo-enter .project-list > *:nth-child(2),
+.view.mo-enter .task-group > .task-row:nth-child(2) {
+  animation-delay: calc(var(--pp-mo-stagger) * 1);
+}
+
+.view.mo-enter > *:nth-child(3),
+.view.mo-enter .grid > *:nth-child(3),
+.view.mo-enter .panel-body > *:nth-child(3),
+.view.mo-enter .res-list > *:nth-child(3),
+.view.mo-enter .task-list > *:nth-child(3),
+.view.mo-enter .focus-list > *:nth-child(3),
+.view.mo-enter .project-list > *:nth-child(3),
+.view.mo-enter .task-group > .task-row:nth-child(3) {
+  animation-delay: calc(var(--pp-mo-stagger) * 2);
+}
+
+.view.mo-enter > *:nth-child(4),
+.view.mo-enter .grid > *:nth-child(4),
+.view.mo-enter .panel-body > *:nth-child(4),
+.view.mo-enter .res-list > *:nth-child(4),
+.view.mo-enter .task-list > *:nth-child(4),
+.view.mo-enter .focus-list > *:nth-child(4),
+.view.mo-enter .project-list > *:nth-child(4),
+.view.mo-enter .task-group > .task-row:nth-child(4) {
+  animation-delay: calc(var(--pp-mo-stagger) * 3);
+}
+
+.view.mo-enter > *:nth-child(5),
+.view.mo-enter .grid > *:nth-child(5),
+.view.mo-enter .panel-body > *:nth-child(5),
+.view.mo-enter .res-list > *:nth-child(5),
+.view.mo-enter .task-list > *:nth-child(5),
+.view.mo-enter .focus-list > *:nth-child(5),
+.view.mo-enter .project-list > *:nth-child(5),
+.view.mo-enter .task-group > .task-row:nth-child(5) {
+  animation-delay: calc(var(--pp-mo-stagger) * 4);
+}
+
+.view.mo-enter > *:nth-child(6),
+.view.mo-enter .grid > *:nth-child(6),
+.view.mo-enter .panel-body > *:nth-child(6),
+.view.mo-enter .res-list > *:nth-child(6),
+.view.mo-enter .task-list > *:nth-child(6),
+.view.mo-enter .focus-list > *:nth-child(6),
+.view.mo-enter .project-list > *:nth-child(6),
+.view.mo-enter .task-group > .task-row:nth-child(6) {
+  animation-delay: calc(var(--pp-mo-stagger) * 5);
+}
+
+.view.mo-enter > *:nth-child(7),
+.view.mo-enter .grid > *:nth-child(7),
+.view.mo-enter .panel-body > *:nth-child(7),
+.view.mo-enter .res-list > *:nth-child(7),
+.view.mo-enter .task-list > *:nth-child(7),
+.view.mo-enter .focus-list > *:nth-child(7),
+.view.mo-enter .project-list > *:nth-child(7),
+.view.mo-enter .task-group > .task-row:nth-child(7) {
+  animation-delay: calc(var(--pp-mo-stagger) * 6);
+}
+
+.view.mo-enter > *:nth-child(8),
+.view.mo-enter .grid > *:nth-child(8),
+.view.mo-enter .panel-body > *:nth-child(8),
+.view.mo-enter .res-list > *:nth-child(8),
+.view.mo-enter .task-list > *:nth-child(8),
+.view.mo-enter .focus-list > *:nth-child(8),
+.view.mo-enter .project-list > *:nth-child(8),
+.view.mo-enter .task-group > .task-row:nth-child(8) {
+  animation-delay: calc(var(--pp-mo-stagger) * 7);
+}
+
+.view.mo-enter > *:nth-child(9),
+.view.mo-enter .grid > *:nth-child(9),
+.view.mo-enter .panel-body > *:nth-child(9),
+.view.mo-enter .res-list > *:nth-child(9),
+.view.mo-enter .task-list > *:nth-child(9),
+.view.mo-enter .focus-list > *:nth-child(9),
+.view.mo-enter .project-list > *:nth-child(9),
+.view.mo-enter .task-group > .task-row:nth-child(9) {
+  animation-delay: calc(var(--pp-mo-stagger) * 8);
+}
+
+.view.mo-enter > *:nth-child(10),
+.view.mo-enter .grid > *:nth-child(10),
+.view.mo-enter .panel-body > *:nth-child(10),
+.view.mo-enter .res-list > *:nth-child(10),
+.view.mo-enter .task-list > *:nth-child(10),
+.view.mo-enter .focus-list > *:nth-child(10),
+.view.mo-enter .project-list > *:nth-child(10),
+.view.mo-enter .task-group > .task-row:nth-child(10) {
+  animation-delay: calc(var(--pp-mo-stagger) * 9);
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.3 指针跟随光晕（分镜 5）—— --pp-mx / --pp-my 由 app.js 的 pointermove
+ * 委托写在 .kpi / .waypoint 上；JS 跑不动时变量缺失，radial-gradient 用 50% 兜底，
+ * 静态状态是一层完全透明的覆盖（opacity: 0），不会挡住内容。
+ * .kpi::before 与 .waypoint::after 是这里新占用的伪元素（另外两个已被色带/遮罩占用）。
+ * ------------------------------------------------------------------ */
+
+.kpi::before,
+.waypoint::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background-image: radial-gradient(240px circle at var(--pp-mx, 50%) var(--pp-my, 50%), rgba(255, 143, 163, 0.18), transparent 68%);
+  transition: opacity var(--pp-mo-base) var(--pp-mo-ease);
+}
+
+.kpi:hover::before,
+.kpi:focus-visible::before,
+.waypoint:hover::after,
+.waypoint:focus-visible::after {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.4 KPI 数字滚动（分镜 6）—— 补间由 app.js 的 rAF 完成（只在数值变化时）；
+ * 这里只负责补间结束时的 ppd-flash（filter: brightness，不动布局）。
+ * ------------------------------------------------------------------ */
+
+.kpi .is-counted-up {
+  animation: ppd-flash var(--pp-mo-base) var(--pp-mo-ease) backwards;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.5 进度条生长 + 高光扫过（分镜 7）
+ * 生长用 transform: scaleX()，绝不改 width —— 静态状态就是 scaleX(1)，
+ * 所以动画不执行时进度仍然是满值显示。
+ * ------------------------------------------------------------------ */
+
+.kpi-bar span,
+.progress-fill,
+.drawer .progress-line > span {
+  position: relative;
+  overflow: hidden;
+  transform-origin: left center;
+  animation: ppd-grow-x var(--pp-mo-enter) var(--pp-mo-ease-out) backwards;
+}
+
+.kpi-bar span::after,
+.progress-fill::after,
+.drawer .progress-line > span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: ppd-sheen 1.1s var(--pp-mo-ease) 320ms backwards;
+}
+
+/* 时间规划的负载柱是竖向的，scaleX 会横向压扁：用极轻的位移+淡入代替（铁律 2 禁止动 height） */
+.timeline .day-fill {
+  animation: ppd-rise-sm var(--pp-mo-enter) var(--pp-mo-ease-out) backwards;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.6 横幅极光漂移 + 素材缓推（分镜 8，常驻环境动效）
+ * 本文件里素材是 .hero 自身的 background-image（行内样式），::before 是色调遮罩、
+ * ::after 是极光光晕：所以「光晕漂移」落在 ::after、「缓推」落在 ::before。
+ * 两者都用 alternate + --pp-mo-ambient（14s），属于环境类，subtle 下关闭。
+ * ------------------------------------------------------------------ */
+
+.hero::after {
+  animation: ppd-halo var(--pp-mo-ambient) var(--pp-mo-ease) infinite alternate;
+}
+
+.hero::before {
+  animation: ppd-kenburns var(--pp-mo-ambient) var(--pp-mo-ease) infinite alternate;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.7 当前页签胶囊（分镜 9）——只在真正换页签时弹一下：
+ * 渲染层会把 mo-enter 同时挂在 #tabs 上（每次重绘都重挂会让胶囊每敲一个字就闪）。
+ * ------------------------------------------------------------------ */
+
+.tabs.mo-enter .tab[aria-current="page"] {
+  animation: ppd-pop var(--pp-mo-base) var(--pp-mo-spring) backwards;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.8 按钮按压与主操作辉光（分镜 10）
+ * ------------------------------------------------------------------ */
+
+.primary-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--pp-mo-fast) var(--pp-mo-ease), box-shadow var(--pp-mo-fast) var(--pp-mo-ease), filter var(--pp-mo-fast) var(--pp-mo-ease);
+}
+
+.primary-btn:hover,
+.primary-btn:focus-visible {
+  box-shadow: 0 8px 28px rgba(255, 143, 163, 0.42);
+}
+
+.primary-btn:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 2px 10px rgba(255, 143, 163, 0.32);
+}
+
+.primary-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+  background-size: 220% 100%;
+  background-position: -140% 0;
+  background-repeat: no-repeat;
+}
+
+.primary-btn:hover::after,
+.primary-btn:focus-visible::after {
+  animation: ppd-sheen 700ms var(--pp-mo-ease) backwards;
+}
+
+/* 状态四选一：确认类动作，用回弹（--pp-mo-spring / ppd-check） */
+.status-option.is-active {
+  animation: ppd-check var(--pp-mo-base) var(--pp-mo-spring) backwards;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.9 行悬停左侧强调条（分镜 11）
+ * 从行左边滑入的 2px 珊瑚条：transform: scaleY(0 → 1)，不动 padding / border。
+ * .res-item.is-blocked 自己已经有 3px 危险色左边框，故排除。
+ * ------------------------------------------------------------------ */
+
+.task-row,
+.res-item:not(.is-blocked),
+.task-line,
+.focus-item {
+  position: relative;
+}
+
+.task-row::before,
+.res-item:not(.is-blocked)::before,
+.task-line::before,
+.focus-item::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: -8px;
+  width: 2px;
+  border-radius: var(--pp-r-pill);
+  background: var(--pp-coral);
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: center top;
+  transition: transform var(--pp-mo-base) var(--pp-mo-ease), opacity var(--pp-mo-base) var(--pp-mo-ease);
+}
+
+.task-row:hover::before,
+.task-row:focus-within::before,
+.res-item:not(.is-blocked):hover::before,
+.res-item:not(.is-blocked):focus-within::before,
+.task-line:hover::before,
+.task-line:focus-within::before,
+.focus-item:hover::before,
+.focus-item:focus-within::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.10 状态呼吸（分镜 12）——阻塞 / 逾期徽标常驻呼吸。
+ * 只用 box-shadow（不动布局），且颜色、文字都另有静态终值（铁律 6）。
+ * ------------------------------------------------------------------ */
+
+.chip[data-tone="danger"],
+.chip[data-tone="blocked"],
+.chip[data-status="blocked"],
+.chip[data-status="expired"],
+.task-line-dot[data-status="blocked"],
+.task-line-dot[data-status="expired"],
+.blocked-badge {
+  animation: ppd-pulse 2.4s var(--pp-mo-ease) infinite alternate;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.11 抽屉入场 + 遮罩淡入（分镜 13）
+ * 只做入场：关闭仍是立即 hidden（铁律 5）。:not([hidden]) 让动画在每次
+ * hidden → 显示 时重新开始，而抽屉内重绘（改字段 / 数据刷新）不会重播。
+ * 抽屉贴右边，所以用 ppd-pop（scale，origin 在右缘）而不是 ppd-slide-in。
+ * ------------------------------------------------------------------ */
+
+.drawer:not([hidden]) {
+  transform-origin: 100% 50%;
+  animation: ppd-pop var(--pp-mo-enter) var(--pp-mo-ease-out) backwards;
+}
+
+.scrim:not([hidden]) {
+  animation: ppd-fade var(--pp-mo-base) var(--pp-mo-ease) backwards;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.12 关键节点页签的指示条（分镜 14）
+ * 每个页签自带一条 2px 指示条，切到当前节点时 translateX(-8px → 0) 滑到位。
+ * （抽屉里的节点导航是 flex-wrap 的胶囊列表，没有可跨页签滑动的固定轨道，
+ *   所以按页签各自出场，用 translateX 表达「滑入」。）
+ * ------------------------------------------------------------------ */
+
+.milestone-tab {
+  position: relative;
+}
+
+.milestone-tab::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: var(--pp-r-pill);
+  background: var(--pp-coral);
+  opacity: 0;
+  transform: translateX(-8px) scaleX(0.4);
+  transition: transform var(--pp-mo-base) var(--pp-mo-ease), opacity var(--pp-mo-fast) var(--pp-mo-ease);
+}
+
+.milestone-tab.is-active::after {
+  opacity: 1;
+  transform: translateX(0) scaleX(1);
+}
+
+.milestone-tab.is-blocked::after {
+  background: var(--pp-danger);
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.13 加载骨架微光（分镜 16）
+ * 只加一个属性钩子 data-loading（渲染层在「数据未返回」那一帧写上），
+ * 不新增 id、不替换任何现有 DOM：微光挂在现有 .empty 的 ::after 上。
+ * ------------------------------------------------------------------ */
+
+.view[data-loading="true"] .empty::after {
+  content: "";
+  display: block;
+  height: 10px;
+  margin-top: 12px;
+  border-radius: var(--pp-r-pill);
+  background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: ppd-shimmer 1.4s linear infinite;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.14 强度降级：subtle
+ * 关掉环境类（halo / kenburns / pulse / sheen / spotlight），
+ * 位移减半（ppd-rise → ppd-rise-sm 的 6px），stagger 归零，入场降到 260ms。
+ * 指针跟随另由 app.js 只在 full 下挂载。
+ * ------------------------------------------------------------------ */
+
+.app[data-motion="subtle"],
+.drawer[data-motion="subtle"],
+.scrim[data-motion="subtle"] {
+  --pp-mo-stagger: 0ms;
+  --pp-mo-enter: 260ms;
+}
+
+/* subtle 的弹入类一律换成位移更小的 ppd-rise-sm（6px）：
+   必须把**每个** ppd-pop 播放者都列进来。.waypoint 卡片在 .waypoints 里，
+   不是 .grid 的子节点，漏掉它会只剩时长变短、scale 弹入照旧（两面行为不一致）。
+   抽屉在 .app 之外、用自己那份 data-motion，所以选择器不是 .app 后代。 */
+.app[data-motion="subtle"] .view.mo-enter > *,
+.app[data-motion="subtle"] .view.mo-enter .grid > *,
+.app[data-motion="subtle"] .view.mo-enter .waypoint,
+.app[data-motion="subtle"] .view.mo-enter .kpi,
+.app[data-motion="subtle"] .tabs.mo-enter .tab[aria-current="page"],
+.drawer[data-motion="subtle"]:not([hidden]) {
+  animation-name: ppd-rise-sm;
+}
+
+/* 指针光晕在 subtle 下也要真的关掉：.kpi::before / .waypoint::after 是 transition 驱动的，
+   只写 animation: none 是空操作（插件面用 --pp-spot: none + opacity: 0 达到同一效果）。
+   :hover / :focus-visible 规则的优先级更高，必须一起写进来。 */
+.app[data-motion="subtle"] .kpi::before,
+.app[data-motion="subtle"] .kpi:hover::before,
+.app[data-motion="subtle"] .kpi:focus-visible::before,
+.app[data-motion="subtle"] .waypoint::after,
+.app[data-motion="subtle"] .waypoint:hover::after,
+.app[data-motion="subtle"] .waypoint:focus-visible::after { opacity: 0; }
+
+.app[data-motion="subtle"] .hero::before,
+.app[data-motion="subtle"] .hero::after,
+.app[data-motion="subtle"] .kpi::before,
+.app[data-motion="subtle"] .waypoint::after,
+.app[data-motion="subtle"] .primary-btn::after,
+.app[data-motion="subtle"] .kpi-bar span::after,
+.app[data-motion="subtle"] .progress-fill::after,
+.app[data-motion="subtle"] .drawer .progress-line > span::after,
+.app[data-motion="subtle"] .chip[data-tone="danger"],
+.app[data-motion="subtle"] .chip[data-tone="blocked"],
+.app[data-motion="subtle"] .chip[data-status="blocked"],
+.app[data-motion="subtle"] .chip[data-status="expired"],
+.app[data-motion="subtle"] .task-line-dot[data-status="blocked"],
+.app[data-motion="subtle"] .task-line-dot[data-status="expired"],
+.app[data-motion="subtle"] .blocked-badge {
+  animation: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * 15.15 强度降级：off（与 prefers-reduced-motion 等价）
+ * 抽屉与遮罩在 .app 之外，所以三个根各自带 data-motion；属性缺失时按 full，
+ * 默认规则无条件写满动效，永远不会出现「半透明死界面」。
+ * ------------------------------------------------------------------ */
+
+.app[data-motion="off"],
+.app[data-motion="off"] *,
+.app[data-motion="off"] *::before,
+.app[data-motion="off"] *::after,
+.drawer[data-motion="off"],
+.drawer[data-motion="off"] *,
+.drawer[data-motion="off"] *::before,
+.drawer[data-motion="off"] *::after,
+.scrim[data-motion="off"] {
+  animation: none !important;
+  transition: none !important;
+}
+
+.app[data-motion="off"] .kpi:hover,
+.app[data-motion="off"] .kpi:focus-visible,
+.app[data-motion="off"] .waypoint:hover,
+.app[data-motion="off"] .waypoint:focus-visible,
+.app[data-motion="off"] .primary-btn:active {
+  transform: none !important;
+}
+
+.app[data-motion="off"] .kpi::before,
+.app[data-motion="off"] .waypoint::after,
+.app[data-motion="off"] .primary-btn::after {
+  display: none !important;
+}

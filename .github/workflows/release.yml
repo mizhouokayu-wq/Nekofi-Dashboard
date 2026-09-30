@@ -1,0 +1,77 @@
+# 打 tag 即发版：`0.1.0` 这样的 tag 会跑一遍回归，然后创建 Release 并附上
+# Obsidian 需要的三个文件（manifest.json / main.js / styles.css）。
+#
+# ⚠️ tag 必须**不带 v 前缀**。官方要求是「Release 的 tag 必须与 manifest.json 的 version 一致」，
+#    而 Obsidian 下载产物时找的正是「tag 等于 manifest.version 的那个 Release」——
+#    `v0.1.0` 与 `0.1.0` 不相等，加了 v 前缀就找不到可安装的 Release。
+#    误推了 `v0.1.0` 时这个流程会跑起来并明确报错，而不是静默什么都不做。
+#
+# 门禁（任一不过就不发）：
+#   1. tag 与 manifest.json 的 version 逐字相等；
+#   2. `npm run check` 通过 —— 发布的 main.js 必须与源码逐字节一致；
+#   3. 类型检查与全量回归通过。
+name: Release
+
+on:
+  push:
+    tags: ["*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: tag 与 manifest.json 版本必须一致
+        run: |
+          tag="$GITHUB_REF_NAME"
+          manifest="$(node -p "require('./manifest.json').version")"
+          echo "tag=$tag manifest=$manifest"
+          case "$tag" in
+            v*)
+              echo "::error::tag 不能带 v 前缀：Obsidian 要求 tag 与 manifest.json 的 version 一致，请用 '$manifest' 而不是 '$tag'"
+              exit 1
+              ;;
+          esac
+          if [ "$tag" != "$manifest" ]; then
+            echo "::error::tag $tag 与 manifest.json 的 $manifest 不一致"
+            exit 1
+          fi
+
+      - name: 产物与源码同步（逐字节）
+        run: npm run check
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 全量回归
+        run: npm test
+
+      - name: 生成构建来源证明（提交社区目录时推荐）
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
+
+      - name: 创建 Release 并附上交付物
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            main.js manifest.json styles.css \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

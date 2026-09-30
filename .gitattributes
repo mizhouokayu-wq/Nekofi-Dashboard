@@ -1,0 +1,23 @@
+# 文本文件在仓库里统一存 LF；main.js 必须钉成 LF ——
+# `npm run check`（build.mjs --check）是逐字节比较构建产物与仓库里的 main.js，
+# 如果它在 Windows 上被检出成 CRLF，check 会在克隆出来的仓库里假报漂移。
+* text=auto
+main.js text eol=lf
+
+# 源码与文档同样必须钉成 LF：`.prettierrc.json` 的 endOfLine 是 "lf"，
+# 而 Windows 上 core.autocrlf 默认就是 true —— 只靠 `* text=auto` 时，
+# 克隆出来就是 CRLF，`npm run format:check` 会对全部 24 个 .ts 报"需要格式化"。
+*.ts text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# 素材与打包产物不参与换行转换
+*.jpg binary
+*.png binary
+*.jpeg binary

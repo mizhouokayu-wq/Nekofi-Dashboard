@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>个人规划仪表盘 · Web</title>
+  <meta name="description" content="个人规划仪表盘的极简主义 Web 版本：项目推演、时间规划、任务层级与知识沉淀。数据来自 Obsidian 笔记的 frontmatter。">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" id="pp-app">
+    <header class="topbar">
+      <a class="brand" href="#/overview">
+        <span class="brand-text">
+          <strong>个人规划</strong>
+          <small>PERSONAL OPERATING SYSTEM</small>
+        </span>
+      </a>
+
+      <nav class="tabs" id="tabs" role="tablist" aria-label="页面导航"></nav>
+
+      <div class="topbar-side">
+        <button type="button" class="primary-btn" id="source-toggle" hidden>切换数据源</button>
+        <span class="date-chip" id="date-chip"></span>
+      </div>
+    </header>
+
+    <main class="view" id="view" tabindex="-1"></main>
+
+    <!-- 读屏播报区：切页签 / 刷新数据 / 筛选都是"原地更新"，没有焦点变化，
+         靠 role=status + aria-live=polite 才会被念出来；视觉上由 .sr-only 隐藏。
+         必须留在 #pp-app 内：插件只把这棵子树注入 Shadow DOM（WEB_SHELL_HTML）。 -->
+    <div class="sr-only" id="live" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <footer class="footer" id="footer"></footer>
+  </div>
+
+  <!-- 抽屉是对话框：role=dialog + aria-modal 读屏才会当弹层；遮罩只承担鼠标点击关闭 -->
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="详情" hidden></aside>
+  <div class="scrim" id="scrim" hidden aria-hidden="true" data-action="close-drawer"></div>
+
+  <script src="data.js"></script>
+  <script src="data.sample.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

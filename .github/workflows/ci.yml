@@ -1,0 +1,40 @@
+# 回归门槛：四个平台/系统组合都要过。
+#
+# 为什么两个操作系统都跑：`npm run check` 是**逐字节**比较「重新构建出的 main.js」与
+# 「仓库里的 main.js」，而 main.js 里内联了 web/app.js 与 web/styles.css 的原文 ——
+# 换行符随平台的差异最容易在这里变成假漂移，所以 Linux + Windows 各跑一遍才算数。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} · node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 产物与源码同步（逐字节）
+        run: npm run check
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 全量回归（348 项）
+        run: npm test

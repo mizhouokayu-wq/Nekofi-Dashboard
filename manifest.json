@@ -1,0 +1,9 @@
+{
+  "id": "personal-planning-dashboard",
+  "name": "Nekofi Dashboard",
+  "version": "0.1.0",
+  "minAppVersion": "1.6.6",
+  "description": "基于 Markdown/YAML 的个人规划仪表盘与项目管理插件。视图只读取和跳转，数据仍归笔记所有。",
+  "author": "米粥",
+  "isDesktopOnly": false
+}

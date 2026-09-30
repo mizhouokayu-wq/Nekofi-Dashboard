@@ -1,0 +1,1436 @@
+
+.pp-view-root { --pp-border: var(--background-modifier-border); --pp-muted: var(--text-muted); --pp-surface: color-mix(in srgb, var(--background-secondary) 74%, transparent); padding: 24px clamp(16px, 3vw, 44px) 48px; max-width: 1440px; margin: 0 auto; }
+.pp-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 0 0 16px; margin-bottom: 4px; border-bottom: 1px solid var(--pp-border); }
+.pp-nav-link { border: 0; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 7px; padding: 7px 12px; font: inherit; }
+.pp-nav-link:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.pp-nav-link-active { background: color-mix(in srgb, var(--interactive-accent) 14%, transparent); color: var(--text-accent); font-weight: 600; }
+.pp-inbox-screen, .pp-task-list-screen { display: grid; gap: 10px; }
+.pp-inbox-card, .pp-task-list-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 16px; background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: 12px; }
+.pp-inbox-card-content, .pp-task-list-content { min-width: 0; flex: 1; }
+.pp-inbox-card-content > .pp-muted { overflow-wrap: anywhere; margin-top: 5px; }
+.pp-dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 22px; }
+.pp-title-block h1, .pp-panel h2, .pp-section h2, .pp-task-tracking-card h2 { margin: 0 0 6px; letter-spacing: -0.02em; }
+.pp-title-block p, .pp-panel-head p, .pp-task-tracking-head p { margin: 0; }
+.pp-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.pp-button, .pp-icon-button, .pp-link-button, .pp-choice-button, .pp-milestone-tab { font: inherit; cursor: pointer; }
+.pp-button { border: 1px solid var(--pp-border); background: var(--background-primary); color: var(--text-normal); border-radius: 8px; padding: 7px 12px; }
+.pp-button:hover, .pp-icon-button:hover, .pp-milestone-tab:hover { background: var(--background-modifier-hover); }
+.pp-button-primary { background: var(--interactive-accent); color: var(--text-on-accent); border-color: var(--interactive-accent); }
+.pp-overview { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.pp-stat-card, .pp-panel, .pp-onboarding, .pp-detail-card, .pp-summary-item, .pp-guidance, .pp-task-tracking-card { background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: 14px; }
+.pp-stat-card { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; }
+.pp-stat-hint, .pp-stat-label, .pp-muted { color: var(--pp-muted); font-size: 0.88em; }
+.pp-stat-value { font-size: 1.8em; line-height: 1.2; }
+.pp-dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pp-panel { overflow: hidden; }
+.pp-panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--pp-border); }
+.pp-panel-head h2 { font-size: 1.1em; }
+.pp-panel-body { padding: 8px 18px 14px; }
+.pp-project-row, .pp-inbox-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid color-mix(in srgb, var(--pp-border) 70%, transparent); }
+.pp-project-row:last-child, .pp-inbox-row:last-child { border-bottom: 0; }
+.pp-row-main { min-width: 0; }
+.pp-link-button { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; padding: 0; background: transparent; color: var(--text-accent); text-align: left; }
+.pp-link-button:hover { text-decoration: underline; }
+.pp-task-content { color: var(--text-normal); font-weight: 600; }
+.pp-meta-line { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-top: 5px; font-size: 0.84em; }
+.pp-badge { border-radius: 999px; padding: 2px 8px; font-size: 0.82em; border: 1px solid transparent; }
+.pp-status-planning, .pp-status-todo { background: color-mix(in srgb, var(--color-blue) 18%, transparent); color: var(--color-blue); }
+.pp-status-active, .pp-status-doing { background: color-mix(in srgb, var(--color-green) 18%, transparent); color: var(--color-green); }
+.pp-status-blocked, .pp-status-expired { background: color-mix(in srgb, var(--color-red) 18%, transparent); color: var(--color-red); }
+.pp-status-paused { background: color-mix(in srgb, var(--color-orange) 18%, transparent); color: var(--color-orange); }
+.pp-status-completed, .pp-status-done { background: color-mix(in srgb, var(--color-cyan) 18%, transparent); color: var(--color-cyan); }
+.pp-status-archived, .pp-status-neutral { background: var(--background-modifier-hover); color: var(--pp-muted); }
+.pp-danger { color: var(--color-red); }
+.pp-progress-text { white-space: nowrap; color: var(--pp-muted); font-size: 0.82em; }
+.pp-progress-bar { grid-column: 1 / -1; height: 5px; background: var(--background-modifier-border); border-radius: 999px; overflow: hidden; }
+/* 进度条填充：**不写 transition: width**。动效层用 transform: scaleX() 播"生长"
+   （styles.css 第 11 节 .pp-progress-fill 的 ppd-grow-x），而 width 是布局属性 ——
+   铁律 2 禁止用它做动画，而且填充节点每轮刷新都会重建，width 过渡本来也从未真正生效过。 */
+.pp-progress-fill { height: 100%; background: var(--interactive-accent); border-radius: inherit; }
+.pp-icon-button { border: 1px solid var(--pp-border); background: transparent; color: var(--text-muted); border-radius: 7px; padding: 4px 8px; white-space: nowrap; }
+.pp-task-row { display: flex; flex-direction: column; align-items: stretch; gap: 7px; padding: 13px 0; border-bottom: 1px solid color-mix(in srgb, var(--pp-border) 70%, transparent); }
+.pp-task-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, auto) auto; align-items: center; gap: 12px; padding: 15px 0; border-bottom: 1px solid color-mix(in srgb, var(--pp-border) 70%, transparent); }
+.pp-task-row:last-child, .pp-task-item:last-child { border-bottom: 0; }
+.pp-task-item .pp-meta-line { margin-top: 0; justify-content: flex-end; }
+.pp-task-item .pp-task-actions { justify-content: flex-end; }
+.pp-task-actions { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.pp-empty { display: flex; flex-direction: column; gap: 5px; padding: 18px 0 10px; }
+.pp-onboarding { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-bottom: 18px; }
+.pp-onboarding span { flex: 1; }
+.pp-project-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.pp-summary-item { padding: 14px; display: flex; flex-direction: column; gap: 5px; }
+.pp-summary-item strong { overflow-wrap: anywhere; }
+.pp-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+.pp-detail-card { padding: 16px; }
+.pp-detail-card h3 { margin: 0 0 8px; font-size: 1em; }
+.pp-detail-card p { margin: 0; white-space: pre-wrap; }
+.pp-task-tracking-card { margin-top: 18px; overflow: hidden; }
+.pp-task-tracking-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 18px 18px 14px; }
+.pp-task-tracking-head h2 { font-size: 1.2em; }
+.pp-milestone-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 0 18px; border-bottom: 1px solid var(--pp-border); }
+.pp-milestone-tab-wrap { display: flex; align-items: center; flex: 0 0 auto; border-bottom: 3px solid transparent; }
+.pp-milestone-tab { flex: 0 0 auto; border: 0; background: transparent; color: var(--text-muted); padding: 10px 7px 9px 11px; }
+.pp-milestone-tab-active { border-bottom-color: var(--interactive-accent); color: var(--text-accent); font-weight: 600; }
+.pp-milestone-tab-wrap-active { border-bottom-color: var(--interactive-accent); }
+.pp-milestone-delete { border: 0; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 5px; padding: 2px 7px 3px 4px; font-size: 1.05em; }
+.pp-milestone-edit { border: 0; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 5px; padding: 3px 5px; font-size: 0.78em; }
+.pp-milestone-edit:hover { color: var(--text-accent); background: color-mix(in srgb, var(--interactive-accent) 14%, transparent); }
+.pp-milestone-delete:hover { color: var(--color-red); background: color-mix(in srgb, var(--color-red) 14%, transparent); }
+.pp-task-list { padding: 0 18px 12px; }
+.pp-task-group-title { margin: 16px 0 2px; font-size: 1em; }
+.pp-task-item .pp-task-content { white-space: normal; overflow: visible; text-overflow: clip; }
+/* 任务标题（知识缺口 / 时间监控 / 任务列表的行）继承 .pp-link-button 的单行省略号，
+   长标题会被截断成"只剩前几个字"。任务名是这些行唯一要看的内容，一律换行显示。 */
+.pp-link-button.pp-task-content { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.pp-guidance { padding: 16px 18px; margin-top: 18px; }
+.pp-guidance h2 { font-size: 1.05em; }
+.pp-guidance li { margin: 7px 0; }
+.pp-choice-list { display: grid; gap: 8px; }
+.pp-choice-button { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 14px; border: 1px solid var(--pp-border); border-radius: 9px; background: var(--background-primary); color: var(--text-normal); text-align: left; }
+.pp-choice-button:hover { border-color: var(--interactive-accent); background: var(--background-modifier-hover); }
+@media (max-width: 900px) { .pp-inbox-card, .pp-task-list-row { align-items: flex-start; flex-direction: column; } .pp-dashboard-grid, .pp-detail-grid { grid-template-columns: 1fr; } .pp-task-item { grid-template-columns: minmax(0, 1fr) auto; } .pp-task-item .pp-meta-line { grid-column: 1 / -1; justify-content: flex-start; } .pp-task-item .pp-task-actions { justify-content: flex-start; } .pp-overview, .pp-project-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pp-dashboard-header, .pp-task-tracking-head { flex-direction: column; } .pp-actions { justify-content: flex-start; } }
+@media (max-width: 560px) { .pp-view-root { padding: 16px 12px 32px; } .pp-overview, .pp-project-summary { grid-template-columns: 1fr 1fr; gap: 8px; } .pp-onboarding { align-items: flex-start; flex-direction: column; } }
+.pp-time-plan-day { padding: 11px 0; border-bottom: 1px solid color-mix(in srgb, var(--pp-border) 70%, transparent); }
+/* 今日任务监控：今日块用左侧珊瑚竖线区分于下面的未来负载 */
+.pp-today-monitor { padding: 11px 0 11px 14px; margin-bottom: 4px; border-bottom: 1px solid var(--pp-border); border-left: 3px solid var(--pp-coral); }
+.pp-time-plan-day:last-child { border-bottom: 0; }
+.pp-time-plan-day-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 7px; }
+.pp-time-plan-day-overloaded { color: var(--text-normal); }
+.pp-time-plan-tasks { display: grid; gap: 3px; margin-top: 5px; }
+.pp-time-plan-task { display: block; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.pp-task-set { background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: 14px; overflow: hidden; }
+.pp-task-set-title { margin: 0; padding: 14px 16px 10px; font-size: 1.05em; border-bottom: 1px solid var(--pp-border); }
+.pp-task-group { padding: 0 16px; }
+.pp-hierarchy-group-title { margin: 12px 0 0; font-size: 0.95em; color: var(--pp-muted); }
+.pp-task-group .pp-task-list-row { border-radius: 0; padding-left: 0; padding-right: 0; }
+.pp-resource-section { background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: 14px; padding: 16px 18px; margin: 0 0 14px; }
+.pp-resource-section h2 { margin: 0 0 12px; font-size: 1.08em; }
+.pp-resource-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 0; border-bottom: 1px solid var(--pp-border); }
+.pp-resource-row:last-child { border-bottom: 0; }
+.pp-resource-row > .pp-muted { font-size: 0.82em; overflow-wrap: anywhere; }
+.pp-resource-reference { color: var(--text-accent); font-size: 0.9em; }
+/* UX redesign: hierarchy, focus, and responsive density */
+.pp-view-root { padding: 28px clamp(18px, 4vw, 56px) 56px; }
+.pp-navigation { position: sticky; top: 0; z-index: 5; gap: 6px; padding: 8px 0 14px; margin-bottom: 18px; background: color-mix(in srgb, var(--background-primary) 92%, transparent); backdrop-filter: blur(12px); }
+.pp-nav-link { min-height: 34px; padding: 7px 13px; border: 1px solid transparent; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; }
+.pp-nav-link:hover, .pp-nav-link:focus-visible { border-color: var(--pp-border); outline: none; }
+.pp-nav-link-active { border-color: color-mix(in srgb, var(--interactive-accent) 35%, var(--pp-border)); box-shadow: 0 2px 8px color-mix(in srgb, var(--interactive-accent) 12%, transparent); }
+.pp-page-header { align-items: center; padding: 18px 20px; margin-bottom: 20px; background: linear-gradient(135deg, color-mix(in srgb, var(--interactive-accent) 9%, var(--pp-surface)), var(--pp-surface)); border: 1px solid var(--pp-border); border-radius: 18px; }
+.pp-page-header .pp-title-block h1 { font-size: clamp(1.55em, 2.3vw, 2.1em); }
+.pp-page-header .pp-title-block p { max-width: 68ch; }
+.pp-actions .pp-button, .pp-actions .pp-icon-button { min-height: 34px; }
+.pp-button:focus-visible, .pp-icon-button:focus-visible, .pp-link-button:focus-visible, .pp-milestone-tab:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
+.pp-stat-card { position: relative; overflow: hidden; min-height: 92px; box-shadow: 0 4px 18px color-mix(in srgb, var(--background-modifier-border) 22%, transparent); }
+.pp-stat-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--interactive-accent); }
+.pp-stat-card:nth-child(3)::before { background: var(--color-red); }
+.pp-stat-card:nth-child(4)::before { background: var(--color-orange); }
+.pp-panel, .pp-task-set, .pp-resource-section { box-shadow: 0 5px 22px color-mix(in srgb, var(--background-modifier-border) 18%, transparent); }
+.pp-panel-head { padding: 18px 20px 14px; }
+.pp-panel-body { padding: 10px 20px 16px; }
+.pp-project-row, .pp-inbox-row, .pp-task-list-row, .pp-resource-row { transition: background 120ms ease, transform 120ms ease; }
+.pp-project-row:hover, .pp-inbox-row:hover, .pp-task-list-row:hover, .pp-resource-row:hover { background: color-mix(in srgb, var(--interactive-accent) 5%, transparent); }
+.pp-task-set { margin-bottom: 14px; }
+.pp-task-set-title { padding: 16px 18px 12px; font-size: 1.08em; }
+.pp-hierarchy-group-title { letter-spacing: .01em; text-transform: none; }
+.pp-personal-panel { min-height: 190px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+.pp-personal-panel h2 { font-size: 1.35em; }
+.pp-personal-panel p { max-width: 58ch; margin-bottom: 16px; }
+.pp-resource-section h2 { font-size: 1.15em; }
+.pp-resource-reference { padding: 2px 5px; border-radius: 5px; }
+.pp-resource-reference:hover { background: color-mix(in srgb, var(--interactive-accent) 10%, transparent); text-decoration: none; }
+.pp-dashboard-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.pp-dashboard-grid > .pp-panel { grid-column: span 6; }
+.pp-dashboard-grid > .pp-panel:first-child { grid-column: span 7; }
+.pp-dashboard-grid > .pp-panel:nth-child(2) { grid-column: span 5; }
+.pp-dashboard-grid > .pp-panel:nth-child(3) { grid-column: span 7; }
+.pp-dashboard-grid > .pp-panel:nth-child(4), .pp-dashboard-grid > .pp-panel:nth-child(5) { grid-column: span 5; }
+@media (max-width: 1100px) { .pp-dashboard-grid > .pp-panel, .pp-dashboard-grid > .pp-panel:first-child, .pp-dashboard-grid > .pp-panel:nth-child(2), .pp-dashboard-grid > .pp-panel:nth-child(3), .pp-dashboard-grid > .pp-panel:nth-child(4), .pp-dashboard-grid > .pp-panel:nth-child(5) { grid-column: span 6; } }
+@media (max-width: 720px) { .pp-view-root { padding: 18px 12px 36px; } .pp-navigation { position: static; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 10px; } .pp-nav-link { flex: 0 0 auto; } .pp-page-header { align-items: flex-start; flex-direction: column; padding: 16px; } .pp-dashboard-grid, .pp-dashboard-grid > .pp-panel, .pp-dashboard-grid > .pp-panel:first-child, .pp-dashboard-grid > .pp-panel:nth-child(2), .pp-dashboard-grid > .pp-panel:nth-child(3), .pp-dashboard-grid > .pp-panel:nth-child(4), .pp-dashboard-grid > .pp-panel:nth-child(5) { grid-template-columns: 1fr; grid-column: 1 / -1; } .pp-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pp-dashboard-hero { position: relative; isolation: isolate; min-height: 190px; display: flex; align-items: flex-end; overflow: hidden; margin: 0 0 18px; padding: 28px clamp(20px, 4vw, 42px); border: 1px solid var(--pp-border); border-radius: 22px; background: linear-gradient(120deg, color-mix(in srgb, var(--interactive-accent) 28%, var(--background-secondary)), var(--background-secondary)); background-size: cover; background-position: center; box-shadow: 0 12px 32px color-mix(in srgb, var(--background-modifier-border) 24%, transparent); }
+.pp-dashboard-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, color-mix(in srgb, var(--background-primary) 86%, transparent), color-mix(in srgb, var(--background-primary) 48%, transparent) 58%, color-mix(in srgb, var(--background-primary) 18%, transparent)); }
+.pp-dashboard-hero::after { content: ""; position: absolute; inset: auto -10% -45% 42%; z-index: -1; height: 180px; border-radius: 50%; background: color-mix(in srgb, var(--interactive-accent) 30%, transparent); filter: blur(35px); }
+.pp-dashboard-hero-copy { max-width: 660px; }
+.pp-dashboard-hero-kicker { display: block; margin-bottom: 10px; color: var(--text-accent); font-size: .72em; font-weight: 700; letter-spacing: .16em; }
+.pp-dashboard-hero-title { margin: 0 0 8px; color: var(--text-normal); font-size: clamp(1.55em, 3.3vw, 2.6em); letter-spacing: -.035em; line-height: 1.08; }
+.pp-dashboard-hero-subtitle { margin: 0; color: var(--text-muted); font-size: 1em; }
+@media (max-width: 720px) { .pp-dashboard-hero { min-height: 160px; padding: 22px 18px; border-radius: 16px; } .pp-dashboard-hero::before { background: linear-gradient(90deg, color-mix(in srgb, var(--background-primary) 90%, transparent), color-mix(in srgb, var(--background-primary) 55%, transparent)); } }
+.pp-focus-strip { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 0 0 18px; padding: 14px 18px; border: 1px solid color-mix(in srgb, var(--interactive-accent) 30%, var(--pp-border)); border-radius: 16px; background: linear-gradient(90deg, color-mix(in srgb, var(--interactive-accent) 10%, var(--pp-surface)), var(--pp-surface)); }
+.pp-focus-copy { min-width: 0; display: grid; gap: 3px; }
+.pp-focus-kicker { color: var(--text-accent); font-size: .72em; font-weight: 700; letter-spacing: .12em; }
+.pp-focus-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-focus-strip .pp-actions { flex: 0 0 auto; }
+.pp-personal-panel { background: linear-gradient(135deg, color-mix(in srgb, var(--interactive-accent) 8%, var(--pp-surface)), var(--pp-surface)); }
+.pp-resource-section:nth-child(2) { border-top: 3px solid color-mix(in srgb, var(--interactive-accent) 45%, transparent); }
+@media (max-width: 720px) { .pp-focus-strip { align-items: flex-start; flex-direction: column; } .pp-focus-strip .pp-actions { width: 100%; justify-content: flex-start; } }
+.pp-waypoints { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 18px; }
+.pp-waypoint { position: relative; isolation: isolate; min-height: 150px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; overflow: hidden; padding: 18px; border: 1px solid var(--pp-border); border-radius: 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--interactive-accent) 18%, var(--background-secondary)), var(--background-secondary)); background-position: center; background-size: cover; color: var(--text-normal); text-align: left; cursor: pointer; transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease; }
+.pp-waypoint::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, color-mix(in srgb, var(--background-primary) 12%, transparent), color-mix(in srgb, var(--background-primary) 84%, transparent)); }
+.pp-waypoint:hover, .pp-waypoint:focus-visible { transform: translateY(-2px); border-color: color-mix(in srgb, var(--interactive-accent) 55%, var(--pp-border)); box-shadow: 0 10px 24px color-mix(in srgb, var(--background-modifier-border) 26%, transparent); outline: none; }
+.pp-waypoint-eyebrow { margin-bottom: 8px; color: var(--text-accent); font-size: .68em; font-weight: 700; letter-spacing: .14em; }
+.pp-waypoint-title { margin-bottom: 5px; font-size: 1.18em; }
+.pp-waypoint-description { color: var(--text-muted); font-size: .86em; }
+@media (max-width: 720px) { .pp-waypoints { grid-template-columns: 1fr; } .pp-waypoint { min-height: 120px; } }
+.pp-hero-setting { display: grid; gap: 8px; margin: 8px 0 18px; max-width: 560px; }
+.pp-hero-setting-image { display: block; width: min(100%, 520px); height: 130px; object-fit: cover; border: 1px solid var(--background-modifier-border); border-radius: 12px; background: var(--background-secondary); }
+.pp-asset-picker-modal { width: min(900px, 92vw); }
+.pp-asset-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; max-height: 62vh; overflow: auto; padding: 4px; }
+.pp-asset-card { display: grid; gap: 8px; padding: 8px; border: 1px solid var(--background-modifier-border); border-radius: 12px; background: var(--background-primary); color: var(--text-normal); text-align: left; cursor: pointer; }
+.pp-asset-card:hover, .pp-asset-card:focus-visible { border-color: var(--interactive-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 18%, transparent); outline: none; }
+.pp-asset-card-image { display: block; width: 100%; height: 105px; object-fit: cover; border-radius: 8px; background: var(--background-secondary); }
+.pp-asset-card-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82em; }
+.pp-crop-modal { width: 100%; max-width: 100%; max-height: 88vh; overflow-y: auto; box-sizing: border-box; }
+.pp-crop-modal .pp-modal-actions { position: sticky; bottom: 0; z-index: 5; margin-top: 16px; padding: 12px 0 8px; background: linear-gradient(180deg, rgba(20, 15, 28, 0), rgba(20, 15, 28, 0.94) 46%); }
+.pp-crop-stage { position: relative; width: fit-content; max-width: none; max-height: none; margin: 22px auto; overflow: visible; background: repeating-conic-gradient(var(--background-modifier-border) 0 25%, transparent 0 50%) 50% / 16px 16px; touch-action: none; }
+.pp-crop-image { display: block; width: 100%; height: 100%; max-width: none; max-height: none; object-fit: fill; user-select: none; pointer-events: none; }
+.pp-crop-selection { position: absolute; box-sizing: border-box; z-index: 3; border: 2px solid var(--interactive-accent); background: color-mix(in srgb, var(--interactive-accent) 12%, transparent); box-shadow: 0 0 0 9999px color-mix(in srgb, #000 42%, transparent); cursor: move; touch-action: none;
+  /* 兜底尺寸：即使内联宽高是 0（布局异常 / 舞台尺寸异常），取景框也不会"看不见" */
+  min-width: 64px; min-height: 40px; }
+.pp-crop-handle { position: absolute; width: 14px; height: 14px; border: 2px solid var(--text-on-accent); border-radius: 50%; background: var(--interactive-accent); }
+.pp-crop-handle-nw { top: -8px; left: -8px; cursor: nwse-resize; }
+.pp-crop-handle-ne { top: -8px; right: -8px; cursor: nesw-resize; }
+.pp-crop-handle-sw { bottom: -8px; left: -8px; cursor: nesw-resize; }
+.pp-crop-handle-se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+.pp-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+@media (max-width: 600px) { .pp-asset-picker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pp-asset-card-image { height: 86px; } }
+.pp-task-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 0 0 14px; padding: 12px; border: 1px solid var(--pp-border); border-radius: 14px; background: var(--pp-surface); }
+.pp-filter-search { flex: 1 1 220px; min-height: 34px; padding: 6px 10px; border: 1px solid var(--pp-border); border-radius: 8px; background: var(--background-primary); color: var(--text-normal); }
+.pp-filter-control { display: grid; gap: 4px; min-width: 140px; }
+.pp-filter-label { color: var(--pp-muted); font-size: .76em; }
+.pp-filter-select { min-height: 34px; padding: 5px 8px; border: 1px solid var(--pp-border); border-radius: 8px; background: var(--background-primary); color: var(--text-normal); }
+.pp-multi-choice-list { display: grid; gap: 6px; max-height: 52vh; overflow: auto; margin: 12px 0; }
+.pp-multi-choice-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--pp-border); border-radius: 9px; background: var(--background-primary); }
+.pp-multi-choice-row:hover { background: var(--background-modifier-hover); }
+.pp-multi-choice-row input { margin-top: 4px; flex: 0 0 auto; }
+.pp-multi-choice-row label { display: grid; gap: 2px; min-width: 0; cursor: pointer; }
+.pp-multi-choice-row label .pp-muted { overflow-wrap: anywhere; }
+.pp-direct-asset-picker { display: flex; align-items: center; gap: 8px; margin: 8px 0 18px; }
+.pp-native-asset-picker { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 10px 0 14px; }
+.pp-native-asset-picker input[type="file"] { max-width: 100%; color: var(--text-muted); }
+
+
+/* =====================================================================
+ * 夜航极光 · Nightfall Aurora（v0.3.0 配色系统）
+ *
+ * 设计目标：美观优先。保留「深夜书房」的深色血统，把配色、层级与质感整体重做。
+ *
+ *   0. 底色是带蓝调的墨紫，5 级抬升（bg-0…bg-4）：面板之间靠"层级 + 高光"区分，
+ *      而不是靠描边；深色界面里堆描边会显脏。
+ *   1. 描边用带紫调的半透明白，不用纯白 —— 纯白线在深紫底上会发灰。
+ *   2. 主色序列日珊瑚 #FF8FA3（延续珊瑚血统，但只在一处发光），
+ *      结构色极光青 #5FE3C0，信息色紫藤 #A78BFA，告警琥珀 #FFC46B，危险玫瑰 #FF5F7A。
+ *   3. 颜色只承担少量信息量：状态先靠形状与位置，颜色只做强调。
+ *   4. 玻璃面板 = 顶部一线高光 + 上亮下暗的极浅渐变 + 大范围柔和投影，做出"悬浮"感。
+ *   5. 数字用等宽数字（tabular-nums），标题用负字距，营造精密感。
+ *
+ * 作用域：只有 .pp-view-root（五个视图）与 .pp-modal（插件弹窗），
+ * 不影响 Obsidian 其它界面；设置页仍跟随 Obsidian 原生外观。
+ * 想换配色：只改第 0 节令牌即可，下面所有规则都从令牌派生。
+ * ===================================================================== */
+
+/* =====================================================================
+ * 0. 设计令牌
+ * ===================================================================== */
+
+/* 弹窗容器也要拿到令牌：`.modal`（容器里的那层）才是画背景的元素，而自定义属性不会向父级继承 ——
+   以前 `--pp-bg-*` 只定义在 `.pp-modal`（.modal 的子节点）上，
+   于是 `.modal-container:has(.pp-modal) .modal { background: linear-gradient(… var(--pp-bg-2) …) }`
+   这条声明引用失败、整条失效，弹窗就只剩 Obsidian 自己的半透明底 —— 看起来"背景全透明"。 */
+.pp-view-root,
+.pp-modal,
+.modal-container:has(.pp-modal) {
+  /* ===== PP_PALETTE_DARK_START ===== */
+  --pp-bg-0: #0a0814;
+  --pp-bg-1: #110e1f;
+  --pp-bg-2: #171331;
+  --pp-bg-3: #201a3d;
+  --pp-bg-4: #2a2350;
+  --pp-line-1: rgba(163, 148, 255, 0.14);
+  --pp-line-2: rgba(163, 148, 255, 0.28);
+  --pp-line-3: rgba(255, 255, 255, 0.05);
+  --pp-ink-1: #f6f3ff;
+  --pp-ink-2: #cfc8e6;
+  --pp-ink-3: #9890b4;
+  --pp-ink-4: #8d85a8;
+  --pp-coral: #ff8fa3;
+  --pp-coral-hi: #ffb7c5;
+  --pp-coral-soft: rgba(255, 143, 163, 0.14);
+  --pp-mint: #5fe3c0;
+  --pp-mint-soft: rgba(95, 227, 192, 0.14);
+  --pp-lilac: #a78bfa;
+  --pp-lilac-soft: rgba(167, 139, 250, 0.16);
+  --pp-amber: #ffc46b;
+  --pp-amber-soft: rgba(255, 196, 107, 0.14);
+  --pp-rose: #ff5f7a;
+  --pp-rose-soft: rgba(255, 95, 122, 0.14);
+  --pp-glass: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.022));
+  --pp-glass-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.035));
+  --pp-lift-1: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 10px 28px rgba(4, 2, 12, 0.42);
+  --pp-lift-2: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 20px 48px rgba(4, 2, 12, 0.55);
+  --pp-glow: 0 0 0 1px var(--pp-coral-soft), 0 10px 30px rgba(255, 143, 163, 0.18);
+  --pp-grad-cta: linear-gradient(120deg, #ff8fa3 0%, #ffb7c5 100%);
+  --pp-grad-active: linear-gradient(120deg, #ff8fa3 0%, #a78bfa 100%);
+  --pp-grad-fill: linear-gradient(90deg, #ff8fa3 0%, #a78bfa 100%);
+  --pp-grad-hero: linear-gradient(105deg, rgba(10, 8, 20, 0.94) 4%, rgba(23, 19, 49, 0.62) 48%, rgba(167, 139, 250, 0.14) 100%);
+  --pp-halo: radial-gradient(920px 540px at 12% -10%, rgba(255, 143, 163, 0.18), transparent 62%),
+    radial-gradient(780px 500px at 92% 2%, rgba(167, 139, 250, 0.16), transparent 60%),
+    radial-gradient(940px 660px at 50% 112%, rgba(95, 227, 192, 0.10), transparent 62%);
+  --pp-on-ink: #1a1020;
+  /* ===== PP_PALETTE_DARK_END ===== */
+
+  /* ---- 圆角与节奏 ---- */
+  --pp-r-sm: 8px;
+  --pp-r-md: 12px;
+  --pp-r-lg: 16px;
+  --pp-r-xl: 20px;
+  --pp-r-pill: 999px;
+
+  /* ---- 动效节奏（MOTION.md 第 1 节；与 .theme-light 作用域取值逐字一致）---- */
+  --pp-mo-instant: 90ms;
+  --pp-mo-fast: 140ms;
+  --pp-mo-base: 220ms;
+  --pp-mo-slow: 380ms;
+  --pp-mo-enter: 480ms;
+  --pp-mo-ambient: 14s;
+  --pp-mo-stagger: 45ms;
+  --pp-mo-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --pp-mo-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pp-mo-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pp-mo-lift: -3px;
+
+  /* ---- 覆盖 Obsidian 变量：既有规则自动继承 ---- */
+  --text-normal: var(--pp-ink-2);
+  --text-muted: var(--pp-ink-3);
+  --text-faint: var(--pp-ink-4);
+  --text-accent: var(--pp-coral);
+  --text-accent-hover: var(--pp-coral-hi);
+  --text-on-accent: #1a1020;
+  --text-selection: rgba(255, 143, 163, 0.26);
+  --background-primary: var(--pp-bg-1);
+  --background-primary-alt: var(--pp-bg-2);
+  --background-secondary: var(--pp-bg-2);
+  --background-secondary-alt: var(--pp-bg-3);
+  --background-modifier-border: var(--pp-line-1);
+  --background-modifier-border-hover: var(--pp-line-2);
+  --background-modifier-hover: rgba(255, 255, 255, 0.06);
+  --interactive-accent: var(--pp-coral);
+  --interactive-accent-hover: var(--pp-coral-hi);
+  --divider-color: var(--pp-line-1);
+  --color-red: var(--pp-rose);
+  --color-orange: var(--pp-amber);
+  --color-yellow: var(--pp-amber);
+  --color-green: var(--pp-mint);
+  --color-cyan: var(--pp-mint);
+  --color-blue: var(--pp-lilac);
+  --color-purple: var(--pp-lilac);
+
+  /* 兼容基线样式里引用的旧令牌名 */
+  --pp-border: var(--pp-line-1);
+  --pp-muted: var(--pp-ink-3);
+  --pp-surface: var(--pp-glass);
+
+  color: var(--pp-ink-2);
+  font-feature-settings: "tnum" 1, "cv01" 1;
+}
+
+/* =====================================================================
+ * 1. 画布与外壳
+ * ===================================================================== */
+
+.pp-view-root {
+  min-height: 100%;
+  padding: 28px clamp(18px, 4vw, 56px) 64px;
+  background: var(--pp-halo), linear-gradient(180deg, var(--pp-bg-1) 0%, var(--pp-bg-0) 100%);
+  background-attachment: fixed;
+  color: var(--pp-ink-2);
+}
+
+.pp-view-root ::selection,
+.pp-modal ::selection { background: rgba(255, 143, 163, 0.26); color: var(--pp-ink-1); }
+
+/* =====================================================================
+ * 2. 顶部导航：胶囊 + 珊瑚/紫藤渐变高亮
+ * ===================================================================== */
+
+.pp-navigation {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  gap: 6px;
+  padding: 10px 0 14px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--pp-line-3);
+  background: color-mix(in srgb, var(--pp-bg-0) 82%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+.pp-nav-link {
+  min-height: 34px;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--pp-r-pill);
+  color: var(--pp-ink-3);
+  font-size: 0.94em;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.pp-nav-link:hover,
+.pp-nav-link:focus-visible {
+  color: var(--pp-ink-1);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: var(--pp-line-1);
+  outline: none;
+}
+
+.pp-nav-link-active {
+  background: var(--pp-grad-active);
+  border-color: transparent;
+  color: #1a1020;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(255, 143, 163, 0.26);
+}
+
+.pp-nav-link-active:hover,
+.pp-nav-link-active:focus-visible {
+  color: #1a1020;
+  background: var(--pp-grad-active);
+  filter: brightness(1.05);
+}
+
+/* =====================================================================
+ * 3. 页首与头图横幅
+ * ===================================================================== */
+
+.pp-page-header {
+  align-items: center;
+  padding: 20px 22px;
+  margin-bottom: 24px;
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-xl);
+  background: var(--pp-glass);
+  box-shadow: var(--pp-lift-1);
+}
+
+.pp-page-header .pp-title-block h1 {
+  color: var(--pp-ink-1);
+  font-size: clamp(1.6em, 2.4vw, 2.15em);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.pp-page-header .pp-title-block p { max-width: 68ch; color: var(--pp-ink-3); }
+
+.pp-dashboard-hero {
+  border: 1px solid var(--pp-line-2);
+  border-radius: var(--pp-r-xl);
+  min-height: 210px;
+  box-shadow: var(--pp-lift-2);
+  background: var(--pp-grad-hero), linear-gradient(120deg, var(--pp-bg-3), var(--pp-bg-2));
+}
+
+.pp-dashboard-hero::before { background: var(--pp-grad-hero); }
+
+.pp-dashboard-hero::after {
+  background: rgba(167, 139, 250, 0.42);
+  filter: blur(46px);
+  opacity: 0.9;
+}
+
+.pp-dashboard-hero-kicker {
+  color: var(--pp-coral-hi);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.pp-dashboard-hero-title {
+  color: #ffffff;
+  font-size: clamp(1.7em, 3.4vw, 2.7em);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.06;
+  text-shadow: 0 2px 24px rgba(4, 2, 12, 0.6);
+}
+
+.pp-dashboard-hero-subtitle { color: rgba(255, 255, 255, 0.82); }
+
+/* =====================================================================
+ * 4. 统计卡与今日焦点
+ * ===================================================================== */
+
+.pp-overview { gap: 14px; margin-bottom: 22px; }
+
+.pp-stat-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 104px;
+  padding: 18px 20px;
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-lg);
+  background: var(--pp-glass);
+  box-shadow: var(--pp-lift-1);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.pp-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--pp-line-2);
+  box-shadow: var(--pp-lift-2);
+}
+
+/* 统计卡顶部 2px 渐变色带（比左侧色条更克制，也更有整体感）。
+   改成两层背景是为了让第 5 个分镜的指针光晕（--pp-spot，默认 none）与色带共用这一层：
+   第一层 = 光晕（只有 hover 且 motion=full 时才有值），第二层 = 顶部色带（--pp-band，逐卡换色）。
+   这样既不用新增 DOM，也不会把原来的色带弄丢。 */
+.pp-stat-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  height: auto;
+  z-index: -1;
+  background-image: var(--pp-spot, none), var(--pp-band, var(--pp-grad-fill));
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 2px;
+  background-position: 0 0, 0 0;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.pp-stat-card:nth-child(2)::after { --pp-band: linear-gradient(90deg, var(--pp-lilac), var(--pp-mint)); }
+.pp-stat-card:nth-child(3)::after { --pp-band: linear-gradient(90deg, var(--pp-rose), var(--pp-amber)); }
+.pp-stat-card:nth-child(4)::after { --pp-band: linear-gradient(90deg, var(--pp-mint), var(--pp-lilac)); }
+
+.pp-stat-hint { color: var(--pp-ink-4); letter-spacing: 0.06em; }
+.pp-stat-label { color: var(--pp-ink-3); }
+
+.pp-stat-value {
+  color: var(--pp-ink-1);
+  font-size: 2.1em;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+
+.pp-focus-strip {
+  align-items: center;
+  gap: 18px;
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  border: 1px solid rgba(255, 143, 163, 0.30);
+  border-radius: var(--pp-r-lg);
+  background: linear-gradient(96deg, rgba(255, 143, 163, 0.13), rgba(167, 139, 250, 0.07) 58%, transparent);
+  box-shadow: var(--pp-lift-1);
+}
+
+.pp-focus-kicker { color: var(--pp-coral-hi); font-weight: 600; letter-spacing: 0.14em; }
+.pp-focus-title { color: var(--pp-ink-1); font-weight: 600; font-size: 1.12em; letter-spacing: -0.01em; }
+
+/* =====================================================================
+ * 5. 图像导航卡
+ * ===================================================================== */
+
+.pp-waypoints { gap: 14px; margin-bottom: 22px; }
+
+.pp-waypoint {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-xl);
+  min-height: 168px;
+  padding: 20px;
+  background: linear-gradient(120deg, var(--pp-bg-3), var(--pp-bg-2));
+  transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.pp-waypoint::before {
+  background: linear-gradient(180deg, rgba(10, 8, 20, 0.10) 0%, rgba(10, 8, 20, 0.72) 58%, rgba(10, 8, 20, 0.94) 100%);
+}
+
+.pp-waypoint:hover,
+.pp-waypoint:focus-visible {
+  transform: translateY(-4px);
+  border-color: rgba(255, 143, 163, 0.5);
+  box-shadow: var(--pp-glow), var(--pp-lift-2);
+}
+
+.pp-waypoint-eyebrow { color: var(--pp-coral-hi); font-weight: 600; letter-spacing: 0.16em; }
+.pp-waypoint-title { color: #ffffff; font-weight: 600; font-size: 1.28em; letter-spacing: -0.015em; }
+.pp-waypoint-description { color: rgba(255, 255, 255, 0.78); }
+
+/* =====================================================================
+ * 6. 面板与卡片
+ * ===================================================================== */
+
+.pp-panel,
+.pp-task-set,
+.pp-resource-section,
+.pp-task-tracking-card,
+.pp-detail-card,
+.pp-summary-item,
+.pp-guidance,
+.pp-onboarding,
+.pp-task-filters {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-lg);
+  background: var(--pp-glass);
+  box-shadow: var(--pp-lift-1);
+}
+
+.pp-panel-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--pp-line-3); }
+.pp-panel-body { padding: 12px 20px 18px; }
+.pp-panel-head h2,
+.pp-task-tracking-head h2,
+.pp-resource-section h2,
+.pp-task-set-title { color: var(--pp-ink-1); letter-spacing: -0.01em; }
+.pp-onboarding { padding: 16px 20px; }
+
+.pp-detail-card { background: rgba(255, 255, 255, 0.03); }
+.pp-detail-card h3 { color: var(--pp-ink-4); }
+.pp-detail-card p { color: var(--pp-ink-2); }
+
+.pp-summary-item { padding: 16px; }
+.pp-summary-item strong { color: var(--pp-ink-1); font-variant-numeric: tabular-nums; }
+.pp-summary-item .pp-muted { color: var(--pp-ink-3); }
+
+.pp-personal-panel {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-xl);
+  background: linear-gradient(135deg, rgba(255, 143, 163, 0.10), rgba(167, 139, 250, 0.06) 60%, rgba(255, 255, 255, 0.03));
+  box-shadow: var(--pp-lift-1);
+}
+
+
+/* =====================================================================
+ * 7. 列表与行
+ * ===================================================================== */
+
+.pp-project-row,
+.pp-inbox-row,
+.pp-task-list-row,
+.pp-resource-row,
+.pp-task-row,
+.pp-task-item,
+.pp-time-plan-day { border-bottom: 1px solid var(--pp-line-3); }
+
+/* 已完成的任务：留在列表里（sortTaskList 会把它们沉到任务组底部），名字打删除线并转灰。
+   只弱化"名字 + 元信息"，不整行降透明度 —— 元信息里的日期/项目仍要能看清。 */
+.pp-task-done .pp-link-button,
+.pp-task-done .pp-task-content { text-decoration: line-through; color: var(--pp-ink-4); }
+.pp-task-done .pp-meta-line { opacity: 0.72; }
+
+.pp-project-row:hover,
+.pp-inbox-row:hover,
+.pp-task-list-row:hover,
+.pp-resource-row:hover,
+.pp-task-row:hover,
+.pp-task-item:hover {
+  background: linear-gradient(90deg, rgba(255, 143, 163, 0.06), rgba(255, 255, 255, 0.02));
+  border-radius: var(--pp-r-md);
+}
+
+.pp-link-button { color: var(--pp-ink-1); font-weight: 500; }
+.pp-link-button:hover,
+.pp-link-button:focus-visible { color: var(--pp-coral-hi); text-decoration: none; }
+.pp-task-content { color: var(--pp-ink-1); }
+
+.pp-meta-line { color: var(--pp-ink-3); gap: 8px; }
+.pp-muted { color: var(--pp-ink-3); }
+
+.pp-progress-bar { background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: var(--pp-r-pill); overflow: hidden; }
+.pp-progress-fill { background: var(--pp-grad-fill); border-radius: inherit; box-shadow: 0 0 12px rgba(255, 143, 163, 0.35); }
+.pp-progress-text { color: var(--pp-ink-3); font-variant-numeric: tabular-nums; }
+
+.pp-empty strong { color: var(--pp-ink-2); }
+.pp-hierarchy-group-title,
+.pp-task-group-title { color: var(--pp-ink-4); letter-spacing: 0.06em; }
+
+.pp-guidance h2 { color: var(--pp-ink-1); }
+.pp-guidance li { color: var(--pp-ink-3); }
+
+/* 时间规划：柱状高光 */
+.pp-time-plan-day-head strong { color: var(--pp-ink-2); font-variant-numeric: tabular-nums; }
+.pp-time-plan-task { color: var(--pp-ink-3); }
+.pp-time-plan-task:hover { color: var(--pp-ink-1); }
+
+/* =====================================================================
+ * 8. 按钮与表单
+ * ===================================================================== */
+
+.pp-button {
+  min-height: 36px;
+  padding: 8px 16px;
+  border: 1px solid var(--pp-line-2);
+  border-radius: var(--pp-r-pill);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--pp-ink-2);
+  font-size: 0.94em;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.pp-button:hover,
+.pp-button:focus-visible {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--pp-line-2);
+  color: var(--pp-ink-1);
+  outline: none;
+}
+
+.pp-button-primary {
+  border-color: transparent;
+  background: var(--pp-grad-cta);
+  color: #1a1020;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(255, 143, 163, 0.26);
+}
+
+.pp-button-primary:hover,
+.pp-button-primary:focus-visible {
+  background: var(--pp-grad-cta);
+  filter: brightness(1.06);
+  color: #1a1020;
+  transform: translateY(-1px);
+}
+
+.pp-icon-button {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-pill);
+  color: var(--pp-ink-3);
+  padding: 4px 12px;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.pp-icon-button:hover,
+.pp-icon-button:focus-visible {
+  color: var(--pp-ink-1);
+  border-color: rgba(255, 143, 163, 0.5);
+  background: var(--pp-coral-soft);
+  outline: none;
+}
+
+.pp-button:focus-visible,
+.pp-icon-button:focus-visible,
+.pp-link-button:focus-visible,
+.pp-milestone-tab:focus-visible,
+.pp-nav-link:focus-visible,
+.pp-choice-button:focus-visible {
+  outline: 2px solid rgba(255, 143, 163, 0.55);
+  outline-offset: 2px;
+}
+
+.pp-choice-button {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-md);
+  background: rgba(255, 255, 255, 0.035);
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.pp-choice-button strong { color: var(--pp-ink-1); }
+.pp-choice-button:hover {
+  border-color: rgba(255, 143, 163, 0.45);
+  background: var(--pp-coral-soft);
+  transform: translateY(-1px);
+}
+
+.pp-milestone-tab-wrap { border-bottom: 0; }
+.pp-milestone-tab {
+  padding: 7px 14px;
+  border-radius: var(--pp-r-pill);
+  color: var(--pp-ink-3);
+  transition: background 140ms ease, color 140ms ease;
+}
+.pp-milestone-tab:hover { color: var(--pp-ink-1); background: rgba(255, 255, 255, 0.055); }
+.pp-milestone-tab-wrap-active { border-bottom-color: transparent; }
+.pp-milestone-tab-active {
+  color: #1a1020;
+  background: var(--pp-grad-active);
+  font-weight: 600;
+}
+.pp-milestone-edit, .pp-milestone-delete { color: var(--pp-ink-4); border-radius: var(--pp-r-pill); }
+.pp-milestone-edit:hover { color: var(--pp-coral-hi); background: var(--pp-coral-soft); }
+.pp-milestone-delete:hover { color: var(--pp-rose); background: var(--pp-rose-soft); }
+
+.pp-filter-search,
+.pp-filter-select {
+  min-height: 36px;
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-pill);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--pp-ink-2);
+  padding-left: 14px;
+  padding-right: 14px;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.pp-filter-search:focus,
+.pp-filter-select:focus {
+  border-color: rgba(255, 143, 163, 0.55);
+  box-shadow: 0 0 0 3px var(--pp-coral-soft);
+  outline: none;
+}
+
+.pp-filter-label { color: var(--pp-ink-4); letter-spacing: 0.06em; }
+.pp-multi-choice-row {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-md);
+  background: rgba(255, 255, 255, 0.035);
+}
+.pp-multi-choice-row:hover { background: rgba(255, 255, 255, 0.06); border-color: var(--pp-line-2); }
+
+/* 表单里的多选（重复周几）：Obsidian 的 Setting 没有多选控件，这里把一组复选框排成一行，
+   窄屏自动换行。选中态不靠颜色单独表达：勾选框本身 + focus-visible 轮廓都在。 */
+.pp-multi-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  justify-content: flex-end;
+  max-width: 340px;
+}
+.pp-multi-select-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--pp-ink-3);
+  font-size: 0.9em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pp-multi-select-item:hover { color: var(--pp-ink-1); }
+.pp-multi-select-item input { margin: 0; }
+.pp-multi-select-item input:focus-visible { outline: 2px solid rgba(255, 143, 163, 0.55); outline-offset: 2px; }
+
+/* =====================================================================
+ * 9. 徽标、进度与语义色
+ * ===================================================================== */
+
+.pp-badge {
+  border-radius: var(--pp-r-pill);
+  padding: 3px 10px;
+  border: 1px solid var(--pp-line-1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--pp-ink-3);
+  font-size: 0.78em;
+  font-weight: 500;
+}
+
+.pp-status-planning, .pp-status-todo {
+  background: var(--pp-lilac-soft);
+  border-color: rgba(167, 139, 250, 0.34);
+  color: var(--pp-lilac);
+}
+.pp-status-active, .pp-status-doing {
+  background: var(--pp-mint-soft);
+  border-color: rgba(95, 227, 192, 0.34);
+  color: var(--pp-mint);
+}
+.pp-status-blocked, .pp-status-expired {
+  background: var(--pp-rose-soft);
+  border-color: rgba(255, 95, 122, 0.36);
+  color: var(--pp-rose);
+}
+.pp-status-paused {
+  background: var(--pp-amber-soft);
+  border-color: rgba(255, 196, 107, 0.34);
+  color: var(--pp-amber);
+}
+.pp-status-completed, .pp-status-done {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--pp-line-1);
+  color: var(--pp-ink-2);
+}
+.pp-status-archived, .pp-status-neutral {
+  background: transparent;
+  border-color: var(--pp-line-1);
+  color: var(--pp-ink-4);
+}
+.pp-danger { color: var(--pp-rose); }
+
+.pp-resource-reference { color: var(--pp-lilac); border-radius: var(--pp-r-sm); }
+.pp-resource-reference:hover { background: var(--pp-lilac-soft); color: var(--pp-lilac); text-decoration: none; }
+
+/* =====================================================================
+ * 10. 弹窗、横幅设置与裁剪
+ * ===================================================================== */
+
+.pp-modal h2 {
+  color: var(--pp-ink-1);
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+.pp-modal p { color: var(--pp-ink-3); }
+
+.modal-container:has(.pp-modal) .modal {
+  border: 1px solid var(--pp-line-2);
+  border-radius: var(--pp-r-xl);
+  /* 兜底：令牌没生效时也必须是"不透明底"（弹窗背景全透明是用户实际反馈过的问题） */
+  background: var(--pp-bg-1, var(--background-primary));
+  background-image: linear-gradient(180deg, var(--pp-bg-2, var(--background-primary)), var(--pp-bg-1, var(--background-primary)));
+  box-shadow: 0 30px 80px rgba(4, 2, 12, 0.65);
+}
+
+.modal-container:has(.pp-crop-modal) .modal,
+.modal-container:has(.pp-asset-picker-modal) .modal { width: min(920px, 94vw); max-width: none; }
+
+.pp-hero-setting-image {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-md);
+  background: var(--pp-bg-3);
+}
+
+.pp-direct-asset-picker .pp-muted,
+.pp-native-asset-picker .pp-muted { color: var(--pp-ink-4); }
+
+.pp-native-asset-picker input[type="file"] { color: var(--pp-ink-3); }
+
+.pp-asset-card {
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-md);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--pp-ink-2);
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+.pp-asset-card:hover, .pp-asset-card:focus-visible {
+  border-color: rgba(255, 143, 163, 0.5);
+  box-shadow: var(--pp-glow);
+  transform: translateY(-2px);
+  outline: none;
+}
+.pp-asset-card-image { border-radius: var(--pp-r-sm); background: var(--pp-bg-3); }
+.pp-asset-card-name { color: var(--pp-ink-3); }
+
+.pp-crop-stage { background: repeating-conic-gradient(rgba(163, 148, 255, 0.16) 0 25%, transparent 0 50%) 50% / 16px 16px; border-radius: var(--pp-r-md); }
+.pp-crop-selection { border: 2px solid var(--pp-coral, var(--interactive-accent, #c93b58)); background: rgba(255, 143, 163, 0.14); box-shadow: 0 0 0 9999px rgba(6, 4, 14, 0.62); min-width: 64px; min-height: 40px; }
+.pp-crop-handle { border: 2px solid var(--pp-bg-0, #ffffff); border-radius: 50%; background: var(--pp-coral, var(--interactive-accent, #c93b58)); }
+.pp-crop-modal .pp-modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-top: 16px;
+  padding: 12px 0 8px;
+  background: linear-gradient(180deg, rgba(23, 19, 49, 0) 0%, rgba(17, 14, 31, 0.96) 46%);
+}
+
+/* =====================================================================
+ * 11. 滚动条、动效与响应式
+ *
+ * 11.0 滚动条
+ * 11.1 动效系统（MOTION.md 契约：关键帧表 + 16 个分镜的原生落点）
+ * 11.2 强度降级（data-pp-motion="subtle" / "off" / prefers-reduced-motion）
+ * ===================================================================== */
+
+.pp-view-root ::-webkit-scrollbar,
+.modal-container:has(.pp-modal) ::-webkit-scrollbar { width: 10px; height: 10px; }
+.pp-view-root ::-webkit-scrollbar-track,
+.modal-container:has(.pp-modal) ::-webkit-scrollbar-track { background: transparent; }
+.pp-view-root ::-webkit-scrollbar-thumb,
+.modal-container:has(.pp-modal) ::-webkit-scrollbar-thumb { background: rgba(163, 148, 255, 0.22); border-radius: var(--pp-r-pill); }
+.pp-view-root ::-webkit-scrollbar-thumb:hover,
+.modal-container:has(.pp-modal) ::-webkit-scrollbar-thumb:hover { background: rgba(163, 148, 255, 0.34); }
+
+/* =====================================================================
+ * 11.1 动效系统（夜航极光 · 流动 / Aurora Motion）
+ *
+ * 铁律（违反即返工，见 MOTION.md 第 0 节）：
+ *   · 动画的终点 = 元素的静态状态。一律 animation-fill-mode: backwards（必要时 both），
+ *     禁止前向填充（fill-mode 里绝不出现那个以 f 开头的关键字）——
+ *     动画不执行（被打断 / 被关掉 / 宿主不支持）时界面必须完整可见。
+ *     所以这里不写"先 opacity: 0 再靠动画显示"的静态声明。
+ *   · 只动 transform / opacity / filter / background-position / box-shadow；
+ *     进度条用 transform: scaleX()，不动 width / height / top / left / margin。
+ *   · 属性缺失或 data-pp-motion="full" → 动效全开（默认规则无条件写满），
+ *     只用属性选择器做降级覆盖 —— 即使 JS 没跑到也永远不会出现"半透明死界面"。
+ *   · 不做退场动画：弹窗关闭保持"立即移除"。
+ *
+ * 分镜编号与 MOTION.md 第 4 节的表格一一对应。
+ * ===================================================================== */
+
+/* ---- 关键帧表（14 个，名称固定；ppd- 前缀避免与 Obsidian / 其它插件撞名）---- */
+@keyframes ppd-rise { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: none; } }
+@keyframes ppd-rise-sm { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+@keyframes ppd-pop { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes ppd-slide-in { from { opacity: 0; transform: translate3d(-10px, 0, 0); } to { opacity: 1; transform: none; } }
+@keyframes ppd-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ppd-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ppd-sheen { from { background-position: -140% 0; } to { background-position: 220% 0; } }
+@keyframes ppd-halo { from { transform: scale(1) rotate(0deg); } to { transform: scale(1.08) rotate(3deg); } }
+@keyframes ppd-kenburns { from { transform: scale(1.02); } to { transform: scale(1.06); } }
+@keyframes ppd-pulse { from { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 34%, transparent); } to { box-shadow: 0 0 0 7px transparent; } }
+@keyframes ppd-shimmer { from { background-position: -160% 0; } to { background-position: 160% 0; } }
+@keyframes ppd-flash { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.35); } }
+@keyframes ppd-march { from { background-position: 0 0; } to { background-position: 16px 0; } }
+@keyframes ppd-check { 0% { transform: scale(0.86); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+/* ---- 分镜 1：整页入场（交错）。只在真正换页时播：.pp-mo-enter 由 JS 只挂首次建面 ---- */
+.pp-mo-enter > * { animation: ppd-rise var(--pp-mo-enter, 480ms) var(--pp-mo-ease-out, ease) backwards; }
+.pp-mo-enter > *:nth-child(2) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 1); }
+.pp-mo-enter > *:nth-child(3) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 2); }
+.pp-mo-enter > *:nth-child(4) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 3); }
+.pp-mo-enter > *:nth-child(5) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 4); }
+.pp-mo-enter > *:nth-child(6) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 5); }
+.pp-mo-enter > *:nth-child(7) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 6); }
+.pp-mo-enter > *:nth-child(8) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 7); }
+.pp-mo-enter > *:nth-child(n+9) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 8); }
+
+/* ---- 分镜 2：列表行 / 面板条目入场（同一个交错节奏，只是位移更小）---- */
+.pp-mo-enter .pp-panel-body > * { animation: ppd-rise-sm var(--pp-mo-enter, 480ms) var(--pp-mo-ease-out, ease) backwards; }
+.pp-mo-enter .pp-panel-body > *:nth-child(2) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 1); }
+.pp-mo-enter .pp-panel-body > *:nth-child(3) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 2); }
+.pp-mo-enter .pp-panel-body > *:nth-child(4) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 3); }
+.pp-mo-enter .pp-panel-body > *:nth-child(5) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 4); }
+.pp-mo-enter .pp-panel-body > *:nth-child(6) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 5); }
+.pp-mo-enter .pp-panel-body > *:nth-child(7) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 6); }
+.pp-mo-enter .pp-panel-body > *:nth-child(n+8) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 7); }
+/* 草稿箱 / 日程待办的列表不在 .pp-panel-body 里（它们是整屏列表与任务集），沿用同一节奏 */
+.pp-mo-enter :is(.pp-inbox-screen, .pp-task-list-screen, .pp-task-group, .pp-task-list) > * { animation: ppd-rise-sm var(--pp-mo-enter, 480ms) var(--pp-mo-ease-out, ease) backwards; }
+.pp-mo-enter :is(.pp-inbox-screen, .pp-task-list-screen, .pp-task-group, .pp-task-list) > *:nth-child(2) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 1); }
+.pp-mo-enter :is(.pp-inbox-screen, .pp-task-list-screen, .pp-task-group, .pp-task-list) > *:nth-child(3) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 2); }
+.pp-mo-enter :is(.pp-inbox-screen, .pp-task-list-screen, .pp-task-group, .pp-task-list) > *:nth-child(4) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 3); }
+.pp-mo-enter :is(.pp-inbox-screen, .pp-task-list-screen, .pp-task-group, .pp-task-list) > *:nth-child(n+5) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 4); }
+
+/* ---- 分镜 3 / 4 / 9：统计卡、图像导航卡、当前导航胶囊 ---- */
+.pp-mo-enter .pp-stat-card { animation: ppd-pop var(--pp-mo-enter, 480ms) var(--pp-mo-ease-out, ease) backwards; }
+.pp-mo-enter .pp-stat-card:nth-child(2) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 1); }
+.pp-mo-enter .pp-stat-card:nth-child(3) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 2); }
+.pp-mo-enter .pp-stat-card:nth-child(4) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 3); }
+.pp-mo-enter .pp-waypoint { animation: ppd-pop var(--pp-mo-enter, 480ms) var(--pp-mo-ease-out, ease) backwards; }
+.pp-mo-enter .pp-waypoints .pp-waypoint:nth-child(2) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 1); }
+.pp-mo-enter .pp-waypoints .pp-waypoint:nth-child(3) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 2); }
+/* 只在本轮是"首次建面"（.pp-mo-enter 在场）时弹一下：导航每次刷新都会重建，
+   无条件挂动画会让"改一篇笔记"也闪一次胶囊（MOTION.md 铁律 3）。 */
+.pp-mo-enter .pp-nav-link-active { animation: ppd-pop var(--pp-mo-base, 220ms) var(--pp-mo-spring, ease) backwards; }
+
+/* ---- 分镜 4 补充：详情卡与摘要条自左滑入（MOTION.md 第 4 节"原生面落点补充"）---- */
+.pp-mo-enter .pp-detail-card,
+.pp-mo-enter .pp-summary-item { animation: ppd-slide-in var(--pp-mo-enter, 480ms) var(--pp-mo-ease-out, ease) backwards; }
+.pp-mo-enter .pp-project-summary > *:nth-child(2),
+.pp-mo-enter .pp-detail-grid > *:nth-child(2) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 1); }
+.pp-mo-enter .pp-project-summary > *:nth-child(3),
+.pp-mo-enter .pp-detail-grid > *:nth-child(3) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 2); }
+.pp-mo-enter .pp-project-summary > *:nth-child(4) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 3); }
+.pp-mo-enter .pp-project-summary > *:nth-child(5) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 4); }
+.pp-mo-enter .pp-project-summary > *:nth-child(6) { animation-delay: calc(var(--pp-mo-stagger, 45ms) * 5); }
+
+/* ---- 分镜 13：弹窗入场（每次打开都是新节点，入场动画自然播放；不做退场）---- */
+.pp-modal { animation: ppd-pop var(--pp-mo-base, 220ms) var(--pp-mo-ease-out, ease) backwards; }
+
+/* ---- 纯淡入（引导条 / 运行提示，没有位移的"静态可见"入场）---- */
+.pp-mo-enter > .pp-onboarding,
+.pp-mo-enter > .pp-guidance { animation: ppd-fade var(--pp-mo-enter, 480ms) var(--pp-mo-ease-out, ease) backwards; }
+
+/* ---- 分镜 5：指针跟随光晕。坐标由 JS 一次性委托写进 --pp-mx/--pp-my，绘制归 CSS ----
+   统计卡：::before / ::after 都被占用（左侧色条 + 顶部色带），所以光晕作为 ::after 的第一层背景；
+   为此 .pp-stat-card 需要 isolation: isolate 才能让 z-index: -1 的伪元素落在"卡片底色之上、文字之下"。 */
+.pp-stat-card { isolation: isolate; --pp-spot: none; }
+.pp-stat-card:hover { --pp-spot: radial-gradient(220px circle at var(--pp-mx, 50%) var(--pp-my, 50%), color-mix(in srgb, var(--pp-coral) 20%, transparent), transparent 64%); transform: translateY(var(--pp-mo-lift, -3px)); }
+.pp-waypoint::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(240px circle at var(--pp-mx, 50%) var(--pp-my, 50%), color-mix(in srgb, var(--pp-coral) 26%, transparent), transparent 66%);
+  transition: opacity var(--pp-mo-base, 220ms) var(--pp-mo-ease, ease);
+}
+.pp-waypoint:hover::after,
+.pp-waypoint:focus-visible::after { opacity: 1; }
+
+/* ---- 分镜 6：数值跳变提示（countUp 结束时由 JS 在 .pp-stat-value 上挂 .ppd-flash）---- */
+.pp-stat-value.ppd-flash,
+.ppd-flash { animation: ppd-flash var(--pp-mo-base, 220ms) var(--pp-mo-ease, ease); }
+
+/* ---- 分镜 7：进度条生长 + 高光扫过（值仍来自 inline width，只动 transform）----
+   这一条**有意**不挂在 .pp-mo-enter 上：进度是数据本身，每次刷新重播生长等于"数据已重算"的
+   可见反馈；它只有 380ms 且位移只有 scaleX，与"胶囊弹跳"那种界面 chrome 的抖动不是一类。 */
+.pp-progress-fill {
+  position: relative;
+  transform-origin: left center;
+  animation: ppd-grow-x var(--pp-mo-slow, 380ms) var(--pp-mo-ease-out, ease) backwards;
+}
+.pp-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.28) 50%, transparent 65%);
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  background-position: -140% 0;
+  animation: ppd-sheen calc(var(--pp-mo-slow, 380ms) * 2.4) var(--pp-mo-ease, ease) var(--pp-mo-slow, 380ms) backwards;
+}
+
+/* ---- 分镜 8：横幅极光漂移（::after 光晕）+ 素材缓推（::before 遮罩）----
+   已知取舍：横幅在每轮刷新时都是新节点，两个 14s 常驻循环会从周期起点重来
+   （上一帧可能停在 scale 1.08 / 1.06）。幅度 ≤8% 且作用在 blur(46px) 的柔光上，
+   肉眼几乎不可见；真要修需要在刷新间复用节点（超出动效层范围），故保留。 */
+.pp-dashboard-hero::before { animation: ppd-kenburns var(--pp-mo-ambient, 14s) var(--pp-mo-ease, ease) infinite alternate; }
+.pp-dashboard-hero::after { animation: ppd-halo var(--pp-mo-ambient, 14s) var(--pp-mo-ease, ease) infinite alternate; }
+
+/* ---- 分镜 10：按钮按压与主操作辉光 ---- */
+.pp-button:active, .pp-icon-button:active, .pp-choice-button:active, .pp-nav-link:active,
+.pp-asset-card:active, .pp-waypoint:active, .pp-milestone-tab:active {
+  transform: translateY(1px) scale(0.985);
+  transition-duration: var(--pp-mo-instant, 90ms);
+}
+.pp-button-primary:hover,
+.pp-button-primary:focus-visible {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pp-coral) 34%, transparent), 0 10px 26px color-mix(in srgb, var(--pp-coral) 30%, transparent);
+}
+
+/* ---- 分镜 11：行悬停，左侧强调条自左滑入（scaleY，不动宽高）---- */
+.pp-project-row, .pp-inbox-row, .pp-task-list-row, .pp-resource-row, .pp-task-row, .pp-task-item, .pp-time-plan-day { position: relative; }
+.pp-project-row::before, .pp-inbox-row::before, .pp-task-list-row::before, .pp-resource-row::before,
+.pp-task-row::before, .pp-task-item::before, .pp-time-plan-day::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  border-radius: var(--pp-r-pill, 999px);
+  background: var(--pp-grad-active);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform var(--pp-mo-fast, 140ms) var(--pp-mo-ease, ease);
+  pointer-events: none;
+}
+.pp-project-row:hover::before, .pp-inbox-row:hover::before, .pp-task-list-row:hover::before,
+.pp-resource-row:hover::before, .pp-task-row:hover::before, .pp-task-item:hover::before,
+.pp-time-plan-day:hover::before,
+.pp-project-row:focus-within::before, .pp-task-list-row:focus-within::before,
+.pp-resource-row:focus-within::before, .pp-task-item:focus-within::before { transform: scaleY(1); }
+
+/* ---- 分镜 12：状态呼吸（阻塞 / 逾期徽标，同色扩散后归零）---- */
+.pp-status-blocked, .pp-status-expired { animation: ppd-pulse 2.6s var(--pp-mo-ease, ease) infinite alternate; }
+
+/* ---- 分镜 14：关键节点页签指示条（当前页签下划线自左生长，落在页签正下方）---- */
+.pp-milestone-tab { position: relative; }
+.pp-milestone-tab::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: -3px;
+  height: 2px;
+  border-radius: var(--pp-r-pill, 999px);
+  background: var(--pp-grad-active);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+}
+/* 有意不挂 .pp-mo-enter：切换关键节点走 tab.onclick → refresh()，那时根节点已非空、没有
+   .pp-mo-enter，收进去会连"切换时下划线生长"一起丢掉。代价是 vault 自动刷新时也会重播
+   一次（220ms、2px、原地 scaleX，与胶囊弹跳的量级不同），故保留。 */
+.pp-milestone-tab-active::after { opacity: 1; animation: ppd-grow-x var(--pp-mo-base, 220ms) var(--pp-mo-ease-out, ease) backwards; }
+
+/* ---- 分镜 15：裁剪取景框蚁行线 + 手柄脉冲 ---- */
+.pp-crop-selection::before,
+.pp-crop-selection::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--pp-ink-1) 85%, transparent) 0 8px, transparent 8px 16px);
+  background-repeat: repeat-x;
+  background-size: 16px 2px;
+  background-position: 0 0;
+  animation: ppd-march 620ms linear infinite;
+}
+.pp-crop-selection::before { top: 0; }
+.pp-crop-selection::after { bottom: 0; }
+.pp-crop-handle {
+  color: var(--pp-coral, var(--interactive-accent, #c93b58));
+  animation: ppd-pulse 2.4s var(--pp-mo-ease, ease) infinite alternate;
+}
+
+/* ---- 分镜 16：首次进入且数据未返回时的骨架微光。
+   不新增 DOM：用根节点的 ::after 画一条 2px 的滑光，finishRender() 会摘掉 .pp-mo-loading ---- */
+.pp-view-root { position: relative; }
+.pp-view-root.pp-mo-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  pointer-events: none;
+  background-image: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--pp-coral) 70%, transparent) 50%, transparent 80%);
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  background-position: -160% 0;
+  animation: ppd-shimmer 1.6s var(--pp-mo-ease, ease) infinite;
+}
+
+/* ---- 补充：勾选 / 切换弹跳（回弹只用于"确认类"动作）---- */
+.pp-multi-choice-row input[type="checkbox"]:checked { animation: ppd-check var(--pp-mo-base, 220ms) var(--pp-mo-spring, ease) backwards; }
+
+/* =====================================================================
+ * 11.2 强度降级：data-pp-motion 与 prefers-reduced-motion
+ *
+ * 缺省（属性缺失或 full）→ 全部动效开启；这里只做降级覆盖。
+ * ===================================================================== */
+
+/* ---- subtle：关闭环境类（halo / kenburns / pulse）、指针光晕与 sheen；
+        位移减半用现成的 ppd-rise-sm（6px）；交错归零；入场降到 260ms ---- */
+.pp-view-root[data-pp-motion="subtle"],
+.pp-modal[data-pp-motion="subtle"] {
+  --pp-mo-stagger: 0ms;
+  --pp-mo-enter: 260ms;
+}
+.pp-view-root[data-pp-motion="subtle"] .pp-dashboard-hero::before,
+.pp-view-root[data-pp-motion="subtle"] .pp-dashboard-hero::after,
+.pp-view-root[data-pp-motion="subtle"] .pp-status-blocked,
+.pp-view-root[data-pp-motion="subtle"] .pp-status-expired,
+.pp-view-root[data-pp-motion="subtle"] .pp-crop-handle,
+.pp-view-root[data-pp-motion="subtle"] .pp-progress-fill::after,
+.pp-modal[data-pp-motion="subtle"] .pp-crop-handle { animation: none; }
+.pp-view-root[data-pp-motion="subtle"] .pp-stat-card { --pp-spot: none; }
+.pp-view-root[data-pp-motion="subtle"] .pp-waypoint::after,
+.pp-view-root[data-pp-motion="subtle"] .pp-waypoint:hover::after,
+.pp-view-root[data-pp-motion="subtle"] .pp-waypoint:focus-visible::after { opacity: 0; }
+.pp-view-root[data-pp-motion="subtle"].pp-mo-enter > * { animation-name: ppd-rise-sm; }
+/* .pp-mo-enter 与 .pp-view-root 是同一个元素，必须写成复合选择器；
+   写成后代（`.pp-view-root[...] .pp-mo-enter …`）永远匹配不到任何节点。
+   弹窗与导航胶囊也在名单里：subtle 的统一语义是「弹入只位移、不缩放」，
+   漏掉任何一类播放者都会出现"同一个档位里有的在缩、有的在移"。 */
+.pp-view-root[data-pp-motion="subtle"].pp-mo-enter .pp-stat-card,
+.pp-view-root[data-pp-motion="subtle"].pp-mo-enter .pp-waypoint,
+.pp-view-root[data-pp-motion="subtle"].pp-mo-enter .pp-detail-card,
+.pp-view-root[data-pp-motion="subtle"].pp-mo-enter .pp-summary-item,
+.pp-view-root[data-pp-motion="subtle"].pp-mo-enter .pp-nav-link-active,
+.pp-modal[data-pp-motion="subtle"] { animation-name: ppd-rise-sm; }
+
+/* ---- off：与 prefers-reduced-motion 等价（各自作用域内彻底关掉）----
+   元素**自身**也要列进来：`*` 只匹配后代，`.pp-modal`（弹窗自身播 ppd-pop）与
+   根节点自身的伪元素（`.pp-view-root.pp-mo-loading::after` 的骨架微光）会漏网，
+   而且 animation 不是可继承属性，元素自身的声明也到不了它的 ::after。 */
+.pp-view-root[data-pp-motion="off"],
+.pp-view-root[data-pp-motion="off"] *,
+.pp-view-root[data-pp-motion="off"] *::before,
+.pp-view-root[data-pp-motion="off"] *::after,
+.pp-view-root[data-pp-motion="off"]::before,
+.pp-view-root[data-pp-motion="off"]::after,
+.pp-modal[data-pp-motion="off"],
+.pp-modal[data-pp-motion="off"] *,
+.pp-modal[data-pp-motion="off"] *::before,
+.pp-modal[data-pp-motion="off"] *::after,
+.pp-modal[data-pp-motion="off"]::before,
+.pp-modal[data-pp-motion="off"]::after { animation: none !important; transition: none !important; }
+.pp-view-root[data-pp-motion="off"] .pp-stat-card { --pp-spot: none; }
+.pp-view-root[data-pp-motion="off"] .pp-waypoint::after,
+.pp-view-root[data-pp-motion="off"] .pp-waypoint:hover::after,
+.pp-view-root[data-pp-motion="off"] .pp-waypoint:focus-visible::after { opacity: 0; }
+.pp-view-root[data-pp-motion="off"] .pp-stat-card:hover,
+.pp-view-root[data-pp-motion="off"] .pp-waypoint:hover,
+.pp-view-root[data-pp-motion="off"] .pp-waypoint:focus-visible,
+.pp-view-root[data-pp-motion="off"] .pp-button-primary:hover,
+.pp-view-root[data-pp-motion="off"] .pp-button-primary:focus-visible,
+.pp-view-root[data-pp-motion="off"] .pp-asset-card:hover,
+.pp-view-root[data-pp-motion="off"] .pp-asset-card:focus-visible,
+.pp-view-root[data-pp-motion="off"] .pp-choice-button:hover,
+.pp-view-root[data-pp-motion="off"] .pp-button:active,
+.pp-view-root[data-pp-motion="off"] .pp-icon-button:active,
+.pp-view-root[data-pp-motion="off"] .pp-choice-button:active,
+.pp-view-root[data-pp-motion="off"] .pp-asset-card:active,
+.pp-view-root[data-pp-motion="off"] .pp-milestone-tab:active,
+.pp-view-root[data-pp-motion="off"] .pp-nav-link:active,
+.pp-view-root[data-pp-motion="off"] .pp-waypoint:active,
+.pp-modal[data-pp-motion="off"] .pp-waypoint:active { transform: none !important; }
+
+/* ---- 系统级「减少动效」优先于用户设置：必须整体关掉 animation/transition，
+       而不是把时长压到近乎 0（带 animation-delay 的交错序列会因此把内容压在半透明状态）---- */
+@media (prefers-reduced-motion: reduce) {
+  .pp-view-root,
+  .pp-view-root *,
+  .pp-view-root *::before,
+  .pp-view-root *::after,
+  /* 根/弹窗**自身**的伪元素也要列：`*::after` 只覆盖后代的伪元素，而
+     `.pp-view-root.pp-mo-loading::after` 的骨架微光挂在根节点自己的 ::after 上，
+     且 animation 不可继承 —— 漏掉它，减少动效环境下那条 2px 滑光仍是 infinite。 */
+  .pp-view-root::before,
+  .pp-view-root::after,
+  .pp-modal::before,
+  .pp-modal::after,
+  .pp-modal,
+  .pp-modal *,
+  .pp-modal *::before,
+  .pp-modal *::after,
+  .pp-web-toolbar-button { animation: none !important; transition: none !important; }
+  /* hover 规则的特异性更高，这里必须把 :hover 一起写进来才能真正关掉指针光晕 */
+  .pp-stat-card,
+  .pp-stat-card:hover { --pp-spot: none; }
+  .pp-waypoint::after,
+  .pp-waypoint:hover::after,
+  .pp-waypoint:focus-visible::after { opacity: 0; }
+  /* 归零名单必须和上面 off 档**逐条对齐**：漏一个，系统开启"减少动效"时那条按压位移就还在
+     （`.pp-waypoint:active` 就漏过一次 —— 图像导航卡按压仍会位移 1px + 轻微缩放）。 */
+  .pp-stat-card:hover, .pp-waypoint:hover, .pp-waypoint:focus-visible, .pp-waypoint:active,
+  .pp-button-primary:hover, .pp-button-primary:focus-visible, .pp-button:active, .pp-icon-button:active,
+  .pp-choice-button:active, .pp-choice-button:hover, .pp-nav-link:active, .pp-asset-card:hover,
+  .pp-asset-card:focus-visible, .pp-asset-card:active, .pp-milestone-tab:active { transform: none !important; }
+}
+
+@media (max-width: 720px) {
+  .pp-view-root { padding: 18px 14px 44px; }
+  .pp-navigation { position: static; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 10px; backdrop-filter: none; background: transparent; }
+  .pp-nav-link { flex: 0 0 auto; }
+  .pp-page-header { align-items: flex-start; flex-direction: column; padding: 16px; border-radius: var(--pp-r-lg); }
+  .pp-dashboard-hero { min-height: 168px; padding: 22px 18px; border-radius: var(--pp-r-lg); }
+  .pp-waypoints { grid-template-columns: 1fr; }
+  .pp-waypoint { min-height: 132px; }
+  .pp-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pp-stat-card { min-height: 88px; padding: 14px 16px; }
+  .pp-stat-value { font-size: 1.7em; }
+}
+
+/* 桌面端让横幅按 16:5 呈现；窄窗口保持原本的矮条形状。
+   为什么只在宽屏生效：整屏宽下再无条件套 aspect-ratio，横幅会被拉成一大块
+   （用户报过"主页横幅突然变得很宽"）。取景本身由 applyHeroCrop 的
+   background-size + background-position 负责 —— 不依赖改变横幅形状。 */
+@media (min-width: 900px) { .pp-dashboard-hero[data-crop="true"] { aspect-ratio: 16 / 5; min-height: 0; box-sizing: border-box; } }
+
+/* ---------------------------------------------------------------- *
+ * Web 渲染层宿主：整棵界面在 Shadow DOM 内，这里只负责把容器铺满视图，
+ * 内部外观完全由 web/styles.css 的设计令牌决定。
+ * ---------------------------------------------------------------- */
+.pp-web-host { display: block; flex: 1 1 auto; min-height: 0; }
+
+/* ---------------------------------------------------------------- *
+ * Web 渲染层操作栏：位于 Shadow DOM 之外，因此可以直接用插件自己的
+ * 夜航极光令牌（令牌作用域来自外层的 .pp-view-root）。
+ * 写操作仍然全部走插件原有的命令与弹窗，网页版本身保持只读。
+ * ---------------------------------------------------------------- */
+.pp-web-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--pp-line-1);
+  background: var(--pp-bg-1);
+}
+.pp-web-toolbar-button {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 14px;
+  color: var(--pp-ink-2);
+  background: var(--pp-glass);
+  border: 1px solid var(--pp-line-1);
+  border-radius: var(--pp-r-pill);
+  box-shadow: var(--pp-lift-1);
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+.pp-web-toolbar-button:hover {
+  color: var(--pp-ink-1);
+  border-color: var(--pp-line-2);
+  background: var(--pp-glass-strong);
+}
+.pp-web-toolbar-primary {
+  color: #1b1420;
+  background: var(--pp-grad-cta);
+  border-color: transparent;
+}
+.pp-web-toolbar-primary:hover {
+  color: #1b1420;
+  border-color: transparent;
+  background: var(--pp-grad-cta);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-web-toolbar-button { transition: none; }
+}
+
+/* =====================================================================
+ * 12. 浅色主题：跟随 Obsidian（moonstone 等）
+ *
+ * `.pp-view-root` 是 Web 面板的令牌作用域，底色写死成深色渐变；`.pp-modal` 是弹窗。
+ * 在浅色 Obsidian 里这两处会变成深色孤岛（Web 面板背后是深色渐变、弹窗整块深紫）。
+ * 这里把同一套令牌换成浅色取值（与 web/styles.css 第 11 节完全一致），
+ * 组件规则一行不动 —— 它们本来就只引用令牌。
+ * ===================================================================== */
+
+.theme-light .pp-view-root,
+.theme-light .pp-modal,
+.theme-light .modal-container:has(.pp-modal) {
+  /* ===== PP_PALETTE_LIGHT_START ===== */
+  --pp-bg-0: #f2f2f4;
+  --pp-bg-1: #fbfbfc;
+  --pp-bg-2: #ffffff;
+  --pp-bg-3: #f4f4f6;
+  --pp-bg-4: #e9e9ef;
+  --pp-line-1: rgba(24, 18, 44, 0.14);
+  --pp-line-2: rgba(24, 18, 44, 0.26);
+  --pp-line-3: rgba(24, 18, 44, 0.06);
+  --pp-ink-1: #14111d;
+  --pp-ink-2: #2f2b3c;
+  --pp-ink-3: #4a4658;
+  --pp-ink-4: #625e78;
+  --pp-coral: #c93b58;
+  --pp-coral-hi: #e26a83;
+  --pp-coral-soft: rgba(201, 59, 88, 0.12);
+  --pp-mint: #137a5b;
+  --pp-mint-soft: rgba(19, 122, 91, 0.12);
+  --pp-lilac: #5b46c8;
+  --pp-lilac-soft: rgba(91, 70, 200, 0.12);
+  --pp-amber: #8f5200;
+  --pp-amber-soft: rgba(143, 82, 0, 0.12);
+  --pp-rose: #b3223c;
+  --pp-rose-soft: rgba(179, 34, 60, 0.12);
+  --pp-glass: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72));
+  --pp-glass-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.88));
+  --pp-lift-1: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 8px 24px rgba(20, 16, 40, 0.10);
+  --pp-lift-2: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 16px 40px rgba(20, 16, 40, 0.16);
+  --pp-glow: 0 0 0 1px rgba(201, 59, 88, 0.18), 0 8px 24px rgba(201, 59, 88, 0.14);
+  --pp-grad-cta: linear-gradient(120deg, #c93b58 0%, #e26a83 100%);
+  --pp-grad-active: linear-gradient(120deg, #c93b58 0%, #5b46c8 100%);
+  --pp-grad-fill: linear-gradient(90deg, #c93b58 0%, #5b46c8 100%);
+  --pp-halo: radial-gradient(920px 540px at 12% -10%, rgba(201, 59, 88, 0.10), transparent 62%),
+    radial-gradient(780px 500px at 92% 2%, rgba(91, 70, 200, 0.09), transparent 60%),
+    radial-gradient(940px 660px at 50% 112%, rgba(19, 122, 91, 0.07), transparent 62%);
+  --pp-on-ink: #ffffff;
+  /* ===== PP_PALETTE_LIGHT_END ===== */
+
+  /* ---- 动效节奏：与深色作用域取值逐字一致（MOTION.md 第 1 节）---- */
+  --pp-mo-instant: 90ms;
+  --pp-mo-fast: 140ms;
+  --pp-mo-base: 220ms;
+  --pp-mo-slow: 380ms;
+  --pp-mo-enter: 480ms;
+  --pp-mo-ambient: 14s;
+  --pp-mo-stagger: 45ms;
+  --pp-mo-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --pp-mo-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pp-mo-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pp-mo-lift: -3px;
+  color-scheme: light;
+}
+
+
+/* 规划提醒通知：可点（打开仪表盘），所以给指针与悬停反馈 */
+.notice.pp-reminder-notice {
+  cursor: pointer;
+}
+
+.notice.pp-reminder-notice:hover {
+  background: var(--pp-bg-2, var(--background-secondary));
+}
+/* 设置页的配置体检面板 */
+.pp-settings-health {
+  margin: 8px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--pp-line-3, var(--background-modifier-border));
+  border-radius: 10px;
+  background: var(--pp-bg-2, var(--background-secondary));
+}
+
+.pp-settings-health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
